@@ -447,7 +447,7 @@ def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 
     stock_data_macd_ema9 = stock_data.sort_values(by='MACD norm', ascending=False)
-
+    print(stock_data_macd_ema9[['Stock', 'MACD norm']].iloc[0:num_stocks])
     for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
         #print(stock)
         print('Generating plot for stock {} sorted after MACD norm'.format(stock))
@@ -473,7 +473,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
     print(stock_data_macd_ema9[['Stock', 'RSI mean change']].iloc[0:num_stocks])
     for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
         #print(stock)
-        #print('Generating plot for stock {} sorted after RSI'.format(stock))
+        print('Generating plot for stock {} sorted after RSI'.format(stock))
         try:
             graph_data_show(stock, MA1, MA2, start_lim, end_lim)
 
@@ -483,7 +483,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 
 def main():
-    stocksToPull = ['FIVEPG.OL', 'AASB-ME.OL', 'ASC.OL', 'ADEA.OL', 'ADEB.OL', 'ADSC-ME.OL', 'AFG.OL', 'APCL.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'AKVA.OL', 'AMSC.OL', 'ABT.OL', 'ARCHER.OL', 'ARCUS.OL', 'ASETEK.OL', 'ATEA.OL', 'ATLA-NOK.OL', 'AURG.OL', 'AUSS.OL', 'AVANCE.OL', 'AVM.OL', 'AWDR.OL', 'ALNG.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BEL.OL', 'BGBIO.OL', 'BIOTEC.OL', 'BSP-ME.OL', 'BON.OL', 'BDRILL.OL', 'BOR.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'BMA.OL', 'COV.OL', 'CRAYON.OL', 'CXENSE.OL', 'DNB.OL', 'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'EVRY.OL', 'FJORD.OL', 'FKRAFT.OL', 'FLNG.OL', 'FRO.OL', 'FUNCOM.OL', 'RISH.OL', 'GJF.OL', 'GOGL.OL', 'GOD.OL', 'GSF.OL', 'GRONG-ME.OL', 'HAVI.OL', 'HYARD.OL', 'HELG.OL', 'HEX.OL', 'HIDDN.OL', 'HBC.OL', 'HUNT.OL', 'HLNG.OL', 'IDEX.OL', 'IOX.OL', 'ITE.OL', 'JPK-ME.OL', 'JIN.OL', 'JAEREN.OL', 'KID.OL', 'KIT.OL', 'KOMP.OL', 'KOA.OL', 'KOG.OL', 'KVAER.OL', 'LSG.OL', 'MSEIS.OL', 'MEDI.OL',  'MOWI.OL', 'MPCC.OL', 'MULTI.OL', 'NAPA.OL', 'NAVA.OL', 'NEL.OL', 'NEXT.OL', 'NORBIT.OL', 'NOM.OL', 'NANO.OL', 'NOD.OL', 'NHY.OL', 'NORTH.OL', 'NODL.OL', 'NRS.OL', 'NAS.OL', 'NPRO.OL', 'NRC.OL', 'NTS.OL', 'OCY.OL', 'OTS.OL', 'ODL.OL', 'ODF.OL', 'ODFB.OL','OET.OL', 'OLT.OL', 'ORK.OL', 'OTELLO.OL', 'PEN.OL', 'PARB.OL', 'PCIB.OL', 'PGS.OL', 'PHLY.OL', 'PHO.OL', 'PLCS.OL', 'PLT.OL', 'PRS.OL', 'PROTCT.OL', 'QEC.OL', 'RAKP.OL', 'REC.OL', 'SDSD.OL', 'SALM.OL', 'SALMON.OL', 'SADG.OL', 'SAS-NOK.OL', 'SBANK.OL', 'SSHIP.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL', 'SOFF.OL', 'SBVG.OL', 'NONG.OL', 'SNOR.OL', 'MING.OL', 'SRBANK.OL', 'SOAG.OL', 'SPOL.OL', 'MORG.OL', 'SOR.OL', 'SVEG.OL', 'SPOG.OL', 'SBLK.OL', 'SNI.OL', 'STB.OL', 'STORM.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL', 'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'WWIB.OL', 'WRE-ME.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL']
+    stocksToPull = ['FIVEPG.OL', 'ASC.OL', 'ADEB.OL', 'AFG.OL', 'APCL.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'AKVA.OL', 'AMSC.OL', 'ARCHER.OL', 'ARCUS.OL', 'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AVM.OL', 'AWDR.OL', 'ALNG.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BEL.OL', 'BGBIO.OL', 'BIOTEC.OL', 'BSP-ME.OL', 'BON.OL', 'BDRILL.OL', 'BOR.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'BMA.OL', 'COV.OL', 'CRAYON.OL', 'CXENSE.OL', 'DNB.OL', 'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'EVRY.OL', 'FJORD.OL', 'FKRAFT.OL', 'FLNG.OL', 'FRO.OL', 'FUNCOM.OL', 'RISH.OL', 'GJF.OL', 'GOGL.OL', 'GOD.OL', 'GSF.OL', 'HYARD.OL', 'HELG.OL', 'HEX.OL', 'HIDDN.OL', 'HBC.OL', 'HUNT.OL', 'HLNG.OL', 'IDEX.OL', 'IOX.OL', 'ITE.OL', 'JPK-ME.OL', 'JIN.OL', 'JAEREN.OL', 'KID.OL', 'KIT.OL', 'KOMP.OL', 'KOA.OL', 'KOG.OL', 'KVAER.OL', 'LSG.OL', 'MSEIS.OL', 'MEDI.OL',  'MOWI.OL', 'MPCC.OL', 'MULTI.OL', 'NAPA.OL', 'NAVA.OL', 'NEL.OL', 'NEXT.OL', 'NORBIT.OL', 'NOM.OL', 'NANO.OL', 'NOD.OL', 'NHY.OL', 'NORTH.OL', 'NODL.OL', 'NRS.OL', 'NAS.OL', 'NPRO.OL', 'NRC.OL', 'OCY.OL', 'OTS.OL', 'ODL.OL', 'ODF.OL', 'ODFB.OL','OET.OL', 'OLT.OL', 'ORK.OL', 'OTELLO.OL', 'PEN.OL', 'PARB.OL', 'PCIB.OL', 'PGS.OL', 'PHLY.OL', 'PHO.OL', 'PLCS.OL', 'PLT.OL', 'PRS.OL', 'PROTCT.OL', 'QEC.OL', 'RAKP.OL', 'REC.OL', 'SDSD.OL', 'SALM.OL', 'SALMON.OL', 'SADG.OL', 'SAS-NOK.OL', 'SBANK.OL', 'SSHIP.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL', 'SOFF.OL', 'SBVG.OL', 'NONG.OL', 'SNOR.OL', 'MING.OL', 'SRBANK.OL', 'SOAG.OL', 'SPOL.OL', 'MORG.OL', 'SOR.OL', 'SVEG.OL', 'SPOG.OL', 'SBLK.OL', 'SNI.OL', 'STB.OL', 'STORM.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL', 'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'WWIB.OL', 'WRE-ME.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL']
 
     start_lim = '2018-07-21'
     end_lim = str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d'))
@@ -509,8 +509,8 @@ def main():
         browse_and_store_stats(stocksToPull)
 
     elif choice == 'Plot':
-        stocks_own =   ['AKER.OL', 'BON.OL', 'ENTRA.OL', 'KVAER.OL', 'EQNR.OL', 'NHY.OL']
-        stocks_watch = ['YAR.OL', 'TEL.OL', 'MPCC.OL']
+        stocks_own =   ['TEL.OL', 'BRG.OL', 'GJF.OL', 'SALM.OL', 'LSG.OL', 'NRC.OL']
+        stocks_watch = ['SBLK.OL',  'SNI.OL']
 
         plot_and_show_selected_stocks(stocks_own, MA1, MA2, start_lim, end_lim)
         plot_and_show_selected_stocks(stocks_watch, MA1, MA2, start_lim, end_lim)
