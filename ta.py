@@ -28,7 +28,7 @@ rsi_mean_change_threshold_upper = 30
 rsi_buy_trigger = 70
 
 def pullData(stock):
-    start = '2016-07-21'
+    start = '2018-01-21'
     try:
         #print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
         #print(str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
@@ -43,7 +43,7 @@ def pullData(stock):
     return data
 
 def saveToFile(data, stock):
-        file_name = 'C:/Users/etg/Stockmarked/' + stock + '.csv'
+        file_name = os.environ['USERPROFILE'] + '/Stockmarked/' + stock + '.csv'
         data.to_csv(file_name)
 
 def pull_save_stocks(stocksTopull):
@@ -363,7 +363,7 @@ def graph_data_norsk_show(stock, existingData, MA1, MA2, start_lim, end_lim):
 
 def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
     try:
-        file_name = 'C:/Users/etg/Stockmarked/' + stock + '.csv'
+        file_name = os.environ['USERPROFILE'] + '/Stockmarked/' + stock + '.csv'
         existingData = pd.read_csv(file_name)
     except Exception as e:
         print('Could not read stock file {} with error {}'.format(stock, e))
@@ -378,7 +378,7 @@ def browse_stocks(stocks):
     print('Calculating stats for stocks')
     for stock in tqdm(stocks):
         try:
-            file_name = 'C:/Users/etg/Stockmarked/' + stock + '.csv'
+            file_name = os.environ['USERPROFILE'] + '/Stockmarked/' + stock + '.csv'
             existingData = pd.read_csv(file_name)
             #print('Calculating stats for stock: {}'.format(stock))
             for i in range(len(existingData.iloc[:,1])):
@@ -413,12 +413,12 @@ def browse_stocks(stocks):
 def browse_and_store_stats(stocks):
     stock_data = browse_stocks(stocks)
     #stock_data = stock_data.sort_values(by='RSI mean change', ascending = True)
-    stock_data.to_csv('C:/Users/etg/Stockmarked/' + 'stock_data_test' + '.csv')
+    stock_data.to_csv(os.environ['USERPROFILE'] + '/Stockmarked/' + 'stock_data_test' + '.csv')
 
 def pull_stored_stock_data():
     pd.options.display.float_format = '{:.5f}'.format
     try:
-        file_name = 'C:/Users/etg/Stockmarked/stock_data_test.csv'
+        file_name = os.environ['USERPROFILE'] + '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
         print('Could not read stock file {} with error {}'.format(stock, e))
@@ -438,9 +438,9 @@ def plot_and_show_selected_stocks(stocks, MA1, MA2, start_lim, end_lim):
 
 def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
     pd.options.display.float_format = '{:.5f}'.format
-    [os.remove(file) for file in os.listdir('C:/Users/etg/Stockmarked/') if file.endswith('_macd_change.png')]
+    [os.remove(file) for file in os.listdir(os.environ['USERPROFILE'] + '/Stockmarked/') if file.endswith('_macd_change.png')]
     try:
-        file_name = 'C:/Users/etg/Stockmarked/stock_data_test.csv'
+        file_name = os.environ['USERPROFILE'] + '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
         print('Could not read stock file {} with error {}'.format(stock, e))
@@ -461,9 +461,9 @@ def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
     pd.options.display.float_format = '{:.5f}'.format
-    [os.remove(file) for file in os.listdir('C:/Users/etg/Stockmarked/') if file.endswith('_macd_change.png')]
+    [os.remove(file) for file in os.listdir(os.environ['USERPROFILE'] + '/Stockmarked/') if file.endswith('_macd_change.png')]
     try:
-        file_name = 'C:/Users/etg/Stockmarked/stock_data_test.csv'
+        file_name = os.environ['USERPROFILE'] + '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
         print('Could not read stock file {} with error {}'.format(stock, e))
@@ -483,38 +483,43 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 
 def main():
-    stocksToPull = ['FIVEPG.OL', 'ASC.OL', 'ADEB.OL', 'AFG.OL', 'APCL.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'AKVA.OL', 'AMSC.OL', 'ARCHER.OL', 'ARCUS.OL', 'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AVM.OL', 'AWDR.OL', 'ALNG.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BEL.OL', 'BGBIO.OL', 'BIOTEC.OL', 'BSP-ME.OL', 'BON.OL', 'BDRILL.OL', 'BOR.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'BMA.OL', 'COV.OL', 'CRAYON.OL', 'CXENSE.OL', 'DNB.OL', 'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'EVRY.OL', 'FJORD.OL', 'FKRAFT.OL', 'FLNG.OL', 'FRO.OL', 'FUNCOM.OL', 'RISH.OL', 'GJF.OL', 'GOGL.OL', 'GOD.OL', 'GSF.OL', 'HYARD.OL', 'HELG.OL', 'HEX.OL', 'HIDDN.OL', 'HBC.OL', 'HUNT.OL', 'HLNG.OL', 'IDEX.OL', 'IOX.OL', 'ITE.OL', 'JPK-ME.OL', 'JIN.OL', 'JAEREN.OL', 'KID.OL', 'KIT.OL', 'KOMP.OL', 'KOA.OL', 'KOG.OL', 'KVAER.OL', 'LSG.OL', 'MSEIS.OL', 'MEDI.OL',  'MOWI.OL', 'MPCC.OL', 'MULTI.OL', 'NAPA.OL', 'NAVA.OL', 'NEL.OL', 'NEXT.OL', 'NORBIT.OL', 'NOM.OL', 'NANO.OL', 'NOD.OL', 'NHY.OL', 'NORTH.OL', 'NODL.OL', 'NRS.OL', 'NAS.OL', 'NPRO.OL', 'NRC.OL', 'OCY.OL', 'OTS.OL', 'ODL.OL', 'ODF.OL', 'ODFB.OL','OET.OL', 'OLT.OL', 'ORK.OL', 'OTELLO.OL', 'PEN.OL', 'PARB.OL', 'PCIB.OL', 'PGS.OL', 'PHLY.OL', 'PHO.OL', 'PLCS.OL', 'PLT.OL', 'PRS.OL', 'PROTCT.OL', 'QEC.OL', 'RAKP.OL', 'REC.OL', 'SDSD.OL', 'SALM.OL', 'SALMON.OL', 'SADG.OL', 'SAS-NOK.OL', 'SBANK.OL', 'SSHIP.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL', 'SOFF.OL', 'SBVG.OL', 'NONG.OL', 'SNOR.OL', 'MING.OL', 'SRBANK.OL', 'SOAG.OL', 'SPOL.OL', 'MORG.OL', 'SOR.OL', 'SVEG.OL', 'SPOG.OL', 'SBLK.OL', 'SNI.OL', 'STB.OL', 'STORM.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL', 'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'WWIB.OL', 'WRE-ME.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL']
+    stocksToPull = (['FIVEPG.OL', 'ASC.OL', 'ADEB.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL', 
+    'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AVM.OL', 'AWDR.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BEL.OL', 'BGBIO.OL', 
+    'BIOTEC.OL', 'BON.OL', 'BDRILL.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'BMA.OL', 'COV.OL', 'CRAYON.OL', 'DNB.OL', 
+    'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'EVRY.OL', 'FJORD.OL', 
+    'FKRAFT.OL', 'FLNG.OL', 'FRO.OL', 'FUNCOM.OL', 'GJF.OL', 'GOGL.OL', 'GOD.OL', 'GSF.OL', 'HYARD.OL', 'HELG.OL', 'HEX.OL', 'HIDDN.OL', 
+    'HBC.OL', 'HUNT.OL', 'IDEX.OL', 'IOX.OL', 'ITE.OL', 'JPK-ME.OL', 'JAEREN.OL', 'KID.OL', 'KIT.OL', 'KOMP.OL', 'KOA.OL', 'KOG.OL', 
+    'KVAER.OL', 'LSG.OL', 'MSEIS.OL', 'MEDI.OL',  'MOWI.OL', 'MPCC.OL', 'MULTI.OL', 'NAPA.OL', 'NAVA.OL', 'NEL.OL', 'NEXT.OL', 'NORBIT.OL', 
+    'NOM.OL', 'NANO.OL', 'NOD.OL', 'NHY.OL', 'NORTH.OL', 'NODL.OL', 'NRS.OL', 'NAS.OL', 'NPRO.OL', 'NRC.OL', 'OCY.OL', 'OTS.OL', 'ODL.OL',
+     'ODFB.OL','OET.OL', 'OLT.OL', 'ORK.OL', 'OTELLO.OL', 'PEN.OL', 'PARB.OL', 'PCIB.OL', 'PGS.OL', 'PHLY.OL', 'PHO.OL', 'PLCS.OL', 
+     'PLT.OL', 'PRS.OL', 'PROTCT.OL', 'QEC.OL', 'RAKP.OL', 'REC.OL', 'SDSD.OL', 'SALM.OL', 'SALMON.OL', 'SADG.OL', 'SAS-NOK.OL', 
+     'SBANK.OL', 'SSHIP.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL', 
+     'SOFF.OL', 'SBVG.OL', 'NONG.OL', 'SNOR.OL', 'MING.OL', 'SRBANK.OL', 'SOAG.OL', 'SPOL.OL', 'MORG.OL', 'SOR.OL', 'SVEG.OL', 'SPOG.OL', 
+     'SBLK.OL', 'SNI.OL', 'STB.OL', 'STORM.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL', 
+     'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'WRE-ME.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
     start_lim = '2018-07-21'
     end_lim = str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d'))
     num_stock_to_show = 25
 
-    alternative = input("Hva skal gjøres? [MACD norm = 1, RSI change = 2, Pull and Browse = 3, Plot = 4]")
+    alternative = input("Valg 1-4: \n 1: MACD norm filter \n 2: RSI change filter \n 3: Pull new stock data \n 4: Plot stocks \n 5: Exit \n >> ")
+    while int(alternative) < 1 or int(alternative) > 5:
+        print("Wrong input, try again \n")
+        alternative = input("Valg 1-4: \n 1: MACD norm filter \n 2: RSI change filter \n 3: Pull new stock data \n 4: Plot stocks \n 5: Exit \n >> ")
     if int(alternative) == 1:
-        choice = 'MACD norm'
-    elif int(alternative) == 2:
-        choice = 'RSI change'
-    elif int(alternative) ==3:
-        choice = 'Pull and Browse'
-
-    elif int(alternative) ==4:
-        choice = 'Plot'
-
-    if choice == 'MACD norm':
         plot_macd_change(MA1, MA2, start_lim, end_lim, num_stock_to_show)
-    if choice == 'RSI change':
+    elif int(alternative) == 2:
         plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stock_to_show)
-    elif choice == 'Pull and Browse':
+    elif int(alternative) ==3:
         pull_save_stocks(stocksToPull)
         browse_and_store_stats(stocksToPull)
-
-    elif choice == 'Plot':
-        stocks_own =   ['TEL.OL', 'BRG.OL', 'GJF.OL', 'SALM.OL', 'LSG.OL', 'NRC.OL']
-        stocks_watch = ['SBLK.OL',  'SNI.OL']
+    elif int(alternative) ==4:
+        stocks_own =   ['TEL.OL', 'GJF.OL', 'SALM.OL', 'NRC.OL', 'PEN.OL', 'AUSS.OL', 'EQNR.OL', 'KVAER.OL', 'SSO.OL', 'DNB.OL', ]
+        stocks_watch = ['SNI.OL']
 
         plot_and_show_selected_stocks(stocks_own, MA1, MA2, start_lim, end_lim)
         plot_and_show_selected_stocks(stocks_watch, MA1, MA2, start_lim, end_lim)
-
-
-
+    elif int(alternative) == 5:
+        exit()
+        
 main()
