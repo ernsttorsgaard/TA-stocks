@@ -28,6 +28,9 @@ rsi_mean_change_threshold_upper = 30
 rsi_buy_trigger = 70
 folder = '/Stockmarked/'
 
+if not os.path.exists(os.environ['USERPROFILE'] + folder):
+    os.makedirs(os.environ['USERPROFILE'] + folder)
+
 
 def pullData(stock):
     start = '2018-01-21'
