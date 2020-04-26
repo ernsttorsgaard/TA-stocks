@@ -69,7 +69,13 @@ def saveToFile(data, stock):
     data.to_csv(file_name)
 
 
+stock_counter = 0
+
+
 def pull_save_stocks(stock):
+    global stock_counter
+    stock_counter += 1
+    print(str(stock_counter) + "/" + str(len(stocksToPull)), end=" ")
     print(f'Pulling and saving stock {stock}')
     # for stock in tqdm(stocksTopull):
     data = pullData(stock)
@@ -452,21 +458,21 @@ def browse_stocks(stocks):
 def browse_and_store_stats(stocks):
     stock_data = browse_stocks(stocks)
     #stock_data = stock_data.sort_values(by='RSI mean change', ascending = True)
-    stock_data.to_csv(os.getcwd() +
-                      folder + 'stock_data_test' + '.csv')
+    # stock_data.to_csv(os.getcwd() +
+    #                   folder + 'stock_data_test' + '.csv')
 
 
-def pull_stored_stock_data():
-    pd.options.display.float_format = '{:.5f}'.format
-    try:
-        file_name = os.getcwd() + \
-            '/Stockmarked/stock_data_test.csv'
-        stock_data = pd.read_csv(file_name)
-    except Exception as e:
-        print('Could not read stock file {} with error {}'.format(stock, e))
+# def pull_stored_stock_data():
+#     pd.options.display.float_format = '{:.5f}'.format
+#     try:
+#         file_name = os.getcwd() + \
+#             '/Stockmarked/stock_data_test.csv'
+#         stock_data = pd.read_csv(file_name)
+#     except Exception as e:
+#         print('Could not read stock file {} with error {}'.format(stock, e))
 
-    #stock_data[['RSI', 'MACD', 'EMA9', 'RSI mean change', 'MACD/EMA9']] = stock_data[['RSI', 'MACD', 'EMA9', 'RSI mean change', 'MACD/EMA9']].apply(lambda x: '%.5f' % x)
-    print(stock_data['Price'])
+#     #stock_data[['RSI', 'MACD', 'EMA9', 'RSI mean change', 'MACD/EMA9']] = stock_data[['RSI', 'MACD', 'EMA9', 'RSI mean change', 'MACD/EMA9']].apply(lambda x: '%.5f' % x)
+#     print(stock_data['Price'])
 
 
 def plot_and_show_selected_stocks(stocks, MA1, MA2, start_lim, end_lim):
@@ -549,12 +555,12 @@ def main():
     elif int(alternative) == 2:
         plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stock_to_show)
     elif int(alternative) == 3:
-        start_time = time.clock()
+        start_time = time.process_time()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(pull_save_stocks, stocksToPull)
             browse_and_store_stats(stocksToPull)
-        print(f"Execution took: ")
-        print(time.clock() - start_time)
+        print("Execution took: ", end="")
+        print(time.process_time() - start_time)
     elif int(alternative) == 4:
         stocks_own = ['SHLF.OL', 'ENTRA.OL', 'EQNR.OL', 'PEN.OL', 'DNB.OL',
                       'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL', 'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
