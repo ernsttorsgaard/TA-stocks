@@ -16,12 +16,13 @@ import concurrent.futures
 import time
 import multiprocessing
 
+# list of stocks
 stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
                  'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AWDR.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BGBIO.OL',
                  'BIOTEC.OL', 'BON.OL', 'BDRILL.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'COV.OL', 'CRAYON.OL', 'DNB.OL',
                  'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'TIETOO.OL', 'FJORD.OL',
                  'FKRAFT.OL', 'FLNG.OL', 'FRO.OL', 'FUNCOM.OL', 'GJF.OL', 'GOGL.OL', 'GOD.OL', 'GSF.OL', 'HYARD.OL', 'HELG.OL', 'HEX.OL', 'HIDDN.OL',
-                 'HBC.OL', 'HUNT.OL', 'IDEX.OL', 'IOX.OL', 'ITE.OL', 'JAEREN.OL', 'KID.OL', 'KIT.OL', 'KOMP.OL', 'KOA.OL', 'KOG.OL',
+                 'HBC.OL', 'HUNT.OL', 'IDEX.OL', 'IOX.OL', 'ITE.OL', 'JAEREN.OL', 'KAHOOT-ME.OL', 'KID.OL', 'KIT.OL', 'KOMP.OL', 'KOA.OL', 'KOG.OL',
                  'KVAER.OL', 'LSG.OL', 'MSEIS.OL', 'MEDI.OL',  'MOWI.OL', 'MPCC.OL', 'MULTI.OL', 'NAPA.OL', 'NAVA.OL', 'NEL.OL', 'NEXT.OL', 'NORBIT.OL',
                  'NOM.OL', 'NANO.OL', 'NOD.OL', 'NHY.OL', 'NORTH.OL', 'NODL.OL', 'NRS.OL', 'NAS.OL', 'NPRO.OL', 'NRC.OL', 'OCY.OL', 'OTS.OL', 'ODL.OL',
                  'ODFB.OL', 'OET.OL', 'OLT.OL', 'ORK.OL', 'OTELLO.OL', 'PARB.OL', 'PCIB.OL', 'PEN.OL', 'PGS.OL', 'PHLY.OL', 'PHO.OL', 'PLCS.OL',
@@ -31,7 +32,6 @@ stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.O
                  'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL',
                  'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
-# list of stocks
 nslow = 26
 nfast = 12
 nema = 9
@@ -53,11 +53,8 @@ def pullData(stock):
     start = str(datetime.now().year - 1) + '-' + \
         str(datetime.now().month) + '-' + str(datetime.now().day)
     try:
-        # print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
-        # print(str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
         data = web.DataReader(name=stock, data_source='yahoo', start=start)
         data.sort_index(inplace=True)
-        # data.index = data.index.to_datetime()
 
     except Exception as e:
         print('Could not pull stock {}. Error {} \n'.format(stock, e))
@@ -78,7 +75,6 @@ def pull_save_stocks(stock):
     stock_counter += 1
     print(str(stock_counter) + "/" + str(len(stocksToPull)), end=" ")
     print(f'Pulling and saving stock {stock}')
-    # for stock in tqdm(stocksTopull):
     data = pullData(stock)
     saveToFile(data, stock)
 
@@ -251,6 +247,9 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
     plt.subplots_adjust(hspace=0.0, bottom=0.1,
                         top=0.94, right=0.96, left=0.06)
 
+    mng = plt.get_current_fig_manager()
+    mng.window.state('zoomed')
+
     plt.show()
 
 
@@ -395,6 +394,8 @@ def graph_data_norsk_show(stock, existingData, MA1, MA2, start_lim, end_lim):
     # plt.ylabel('MACD', color='w')
 
     # plt.subplots_adjust(hspace=0.0, bottom=0.1, top=0.94, right=0.96, left=0.06)
+    mng = plt.get_current_fig_manager()
+    mng.window.state('zoomed')
 
     plt.show()
 
@@ -424,7 +425,6 @@ def browse_stocks(stock):
     stats_counter += 1
     print(str(stats_counter) + "/" + str(len(stocksToPull)), end=" ")
     print(f'Calculating stats for stock {stock}')
-    # for stock in tqdm(stocks):
     try:
         file_name = os.getcwd() + folder + stock + '.csv'
         existingData = pd.read_csv(file_name)
@@ -466,22 +466,7 @@ def browse_and_store_stats(stocks):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(browse_stocks, stocksToPull)
     global stock_data
-    # stock_data = browse_stocks(stocks)
-    # stock_data = stock_data.sort_values(by='RSI mean change', ascending = True)
     stock_data.to_csv(os.getcwd() + folder + 'stock_data_test' + '.csv')
-
-
-# def pull_stored_stock_data():
-#     pd.options.display.float_format = '{:.5f}'.format
-#     try:
-#         file_name = os.getcwd() + \
-#             '/Stockmarked/stock_data_test.csv'
-#         stock_data = pd.read_csv(file_name)
-#     except Exception as e:
-#         print('Could not read stock file {} with error {}'.format(stock, e))
-
-#     #stock_data[['RSI', 'MACD', 'EMA9', 'RSI mean change', 'MACD/EMA9']] = stock_data[['RSI', 'MACD', 'EMA9', 'RSI mean change', 'MACD/EMA9']].apply(lambda x: '%.5f' % x)
-#     print(stock_data['Price'])
 
 
 def plot_and_show_selected_stocks(stocks, MA1, MA2, start_lim, end_lim):
@@ -504,7 +489,7 @@ def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
             '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
-        print('Could not read stock file {} with error {}'.format(stock, e))
+        print('Could not read stock file with error {}'.format(e))
 
     stock_data_macd_ema9 = stock_data.sort_values(
         by='MACD norm', ascending=False)
@@ -530,7 +515,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
             '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
-        print('Could not read stock file {} with error {}'.format(stock, e))
+        print('Could not read stock file with error {}'.format(e))
 
     stock_data_macd_ema9 = stock_data.sort_values(
         by='RSI mean change', ascending=False)
