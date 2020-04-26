@@ -1,4 +1,3 @@
-import time
 import pandas as pd
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
@@ -33,7 +32,8 @@ if not os.path.exists(os.getcwd() + folder):
 
 
 def pullData(stock):
-    start = '2018-01-21'
+    start = str(datetime.now().year - 1) + '-' + \
+        str(datetime.now().month) + '-' + str(datetime.now().day)
     try:
         #print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
         #print(str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
@@ -531,9 +531,9 @@ def main():
                      'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL',
                      'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
-    start_lim = '2018-07-21'
-    end_lim = str(datetime.fromtimestamp(
-        time.time()).strftime('%Y-%m-%d'))
+    start_lim = str(datetime.now().year - 1) + '-' + \
+        str(datetime.now().month) + '-' + str(datetime.now().day)
+    end_lim = str(datetime.now().strftime('%Y-%m-%d'))
     num_stock_to_show = 25
 
     alternative = input(
