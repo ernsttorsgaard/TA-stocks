@@ -3,7 +3,7 @@ import pandas as pd
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
 import numpy as np
-import datetime
+from datetime import datetime
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -28,15 +28,15 @@ rsi_mean_change_threshold_upper = 30
 rsi_buy_trigger = 70
 folder = '/Stockmarked/'
 
-if not os.path.exists(os.environ['USERPROFILE'] + folder):
-    os.makedirs(os.environ['USERPROFILE'] + folder)
+if not os.path.exists(os.getcwd() + folder):
+    os.makedirs(os.getcwd() + folder)
 
 
 def pullData(stock):
     start = '2018-01-21'
     try:
-        #print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
-        #print(str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
+        #print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
+        #print(str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
         data = web.DataReader(name=stock, data_source='yahoo', start=start)
         data.sort_index(inplace=True)
         #data.index = data.index.to_datetime()
@@ -48,7 +48,7 @@ def pullData(stock):
 
 
 def saveToFile(data, stock):
-    file_name = os.environ['USERPROFILE'] + folder + stock + '.csv'
+    file_name = os.getcwd() + folder + stock + '.csv'
     data.to_csv(file_name)
 
 
@@ -62,7 +62,7 @@ def pull_save_stocks(stocksTopull):
 def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_lim):
 
     dates_string = existingData.iloc[:, 0]
-    dates = [datetime.datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
+    dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
     xs = matplotlib.dates.date2num(dates)
 
     openp = existingData.iloc[:, 1]
@@ -119,9 +119,9 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
     plt.title('{} Stock'.format(stock), color='w')
     plt.ylabel('RSI')
 
-    start_lim = datetime.datetime.strptime(start_lim, '%Y-%m-%d')
+    start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
     start_lim = matplotlib.dates.date2num(start_lim)
-    end_lim = datetime.datetime.strptime(end_lim, '%Y-%m-%d')
+    end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
     end_lim = matplotlib.dates.date2num(end_lim)
     ax = plt.subplot2grid((7, 4), (1, 0), rowspan=4, sharex=ax0, colspan=4)
     ax.set_facecolor('#07000d')
@@ -233,7 +233,7 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
 def graph_data_norsk_show(stock, existingData, MA1, MA2, start_lim, end_lim):
 
     dates_string = existingData.iloc[:, 0]
-    dates = [datetime.datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
+    dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
     xs = matplotlib.dates.date2num(dates)
 
     closep = existingData.iloc[:, 1]
@@ -281,9 +281,9 @@ def graph_data_norsk_show(stock, existingData, MA1, MA2, start_lim, end_lim):
     plt.title('{} Stock'.format(stock), color='w')
     plt.ylabel('RSI')
 
-    start_lim = datetime.datetime.strptime(start_lim, '%Y-%m-%d')
+    start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
     start_lim = matplotlib.dates.date2num(start_lim)
-    end_lim = datetime.datetime.strptime(end_lim, '%Y-%m-%d')
+    end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
     end_lim = matplotlib.dates.date2num(end_lim)
     ylim_low = min(closep[-400:-1])*1.1
     ylim_high = max(closep[-400:-1])*1.1
@@ -377,7 +377,7 @@ def graph_data_norsk_show(stock, existingData, MA1, MA2, start_lim, end_lim):
 
 def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
     try:
-        file_name = os.environ['USERPROFILE'] + folder + stock + '.csv'
+        file_name = os.getcwd() + folder + stock + '.csv'
         existingData = pd.read_csv(file_name)
     except Exception as e:
         print('Could not read stock file {} with error {}'.format(stock, e))
@@ -396,7 +396,7 @@ def browse_stocks(stocks):
     print('Calculating stats for stocks')
     for stock in tqdm(stocks):
         try:
-            file_name = os.environ['USERPROFILE'] + folder + stock + '.csv'
+            file_name = os.getcwd() + folder + stock + '.csv'
             existingData = pd.read_csv(file_name)
             #print('Calculating stats for stock: {}'.format(stock))
             for i in range(len(existingData.iloc[:, 1])):
@@ -435,14 +435,14 @@ def browse_stocks(stocks):
 def browse_and_store_stats(stocks):
     stock_data = browse_stocks(stocks)
     #stock_data = stock_data.sort_values(by='RSI mean change', ascending = True)
-    stock_data.to_csv(os.environ['USERPROFILE'] +
+    stock_data.to_csv(os.getcwd() +
                       folder + 'stock_data_test' + '.csv')
 
 
 def pull_stored_stock_data():
     pd.options.display.float_format = '{:.5f}'.format
     try:
-        file_name = os.environ['USERPROFILE'] + \
+        file_name = os.getcwd() + \
             '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
@@ -466,9 +466,9 @@ def plot_and_show_selected_stocks(stocks, MA1, MA2, start_lim, end_lim):
 def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
     pd.options.display.float_format = '{:.5f}'.format
     [os.remove(file) for file in os.listdir(
-        os.environ['USERPROFILE'] + folder) if file.endswith('_macd_change.png')]
+        os.getcwd() + folder) if file.endswith('_macd_change.png')]
     try:
-        file_name = os.environ['USERPROFILE'] + \
+        file_name = os.getcwd() + \
             '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
@@ -492,9 +492,9 @@ def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
 def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
     pd.options.display.float_format = '{:.5f}'.format
     [os.remove(file) for file in os.listdir(
-        os.environ['USERPROFILE'] + folder) if file.endswith('_macd_change.png')]
+        os.getcwd() + folder) if file.endswith('_macd_change.png')]
     try:
-        file_name = os.environ['USERPROFILE'] + \
+        file_name = os.getcwd() + \
             '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
@@ -532,7 +532,7 @@ def main():
                      'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
     start_lim = '2018-07-21'
-    end_lim = str(datetime.datetime.fromtimestamp(
+    end_lim = str(datetime.fromtimestamp(
         time.time()).strftime('%Y-%m-%d'))
     num_stock_to_show = 25
 
