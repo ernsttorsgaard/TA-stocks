@@ -14,6 +14,7 @@ from tqdm import tqdm
 from indicators import *
 import concurrent.futures
 import time
+import multiprocessing
 
 stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
                  'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AWDR.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BGBIO.OL',
@@ -52,11 +53,11 @@ def pullData(stock):
     start = str(datetime.now().year - 1) + '-' + \
         str(datetime.now().month) + '-' + str(datetime.now().day)
     try:
-        #print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
-        #print(str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
+        # print('Currently pulling stock {} at time {} \n'.format(stock, str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))))
+        # print(str(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
         data = web.DataReader(name=stock, data_source='yahoo', start=start)
         data.sort_index(inplace=True)
-        #data.index = data.index.to_datetime()
+        # data.index = data.index.to_datetime()
 
     except Exception as e:
         print('Could not pull stock {}. Error {} \n'.format(stock, e))
@@ -244,8 +245,8 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
     ax3.tick_params(axis='x', colors='w')
     ax3.tick_params(axis='y', colors='w')
     ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
-    #plt.ylabel('MACD', color='w')
-    #plt.ylabel('MACD', color='w')
+    # plt.ylabel('MACD', color='w')
+    # plt.ylabel('MACD', color='w')
 
     plt.subplots_adjust(hspace=0.0, bottom=0.1,
                         top=0.94, right=0.96, left=0.06)
@@ -391,9 +392,9 @@ def graph_data_norsk_show(stock, existingData, MA1, MA2, start_lim, end_lim):
     ax3.tick_params(axis='y', colors='w')
     ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
 
-    #plt.ylabel('MACD', color='w')
+    # plt.ylabel('MACD', color='w')
 
-    #plt.subplots_adjust(hspace=0.0, bottom=0.1, top=0.94, right=0.96, left=0.06)
+    # plt.subplots_adjust(hspace=0.0, bottom=0.1, top=0.94, right=0.96, left=0.06)
 
     plt.show()
 
@@ -413,53 +414,61 @@ def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
                               MA2, start_lim, end_lim)
 
 
-def browse_stocks(stocks):
-    stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
-                              'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
-    #print(f'Calculating stats for stock {stock}')
-    for stock in tqdm(stocks):
-        try:
-            file_name = os.getcwd() + folder + stock + '.csv'
-            existingData = pd.read_csv(file_name)
-            #print('Calculating stats for stock: {}'.format(stock))
-            for i in range(len(existingData.iloc[:, 1])):
+stats_counter = 0
+stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
+    'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
 
-                try:
-                    rsi = rsi_func(existingData.iloc[1:i, 1])
 
-                    emaslow, emaslow, macd = macd_calc(
-                        existingData.iloc[1:i, 1])
-                    min_macd = min(macd)
-                    max_macd = max(macd)
-                    if macd[-1] >= 0:
-                        macd_norm = macd[-1] / min_macd
-                    elif macd[-1] < 0:
-                        macd_norm = (macd[-1] / min_macd)
-                    ema9 = exp_moving_average(macd, nema)
-                    rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
-                    rsi_mean_change = rsi[-1] - rsi[-2]
-                    rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
-                    macd_mean_change = np.sum(
-                        np.diff(macd[-n_days:-1]))/(n_day)
-                    macd_mean_change = '{:.6f}'.format(macd_mean_change)
-                except Exception as e:
-                    pass
-            price = existingData.iloc[-1, 1]
-            temp_pd = pd.DataFrame([[stock, price, rsi[-1], macd[-1], abs(macd[-1]-ema9[-1]), macd_norm, rsi_mean_change]],
-                                   columns=['Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
-            stock_data = stock_data.append(temp_pd)
+def browse_stocks(stock):
+    global stock_data, stats_counter
+    stats_counter += 1
+    print(str(stats_counter) + "/" + str(len(stocksToPull)), end=" ")
+    print(f'Calculating stats for stock {stock}')
+    # for stock in tqdm(stocks):
+    try:
+        file_name = os.getcwd() + folder + stock + '.csv'
+        existingData = pd.read_csv(file_name)
+        # print('Calculating stats for stock: {}'.format(stock))
+        for i in range(len(existingData.iloc[:, 1])):
 
-        except Exception as e:
-            print('Could not read stock file {} with error {}'.format(stock, e))
+            try:
+                rsi = rsi_func(existingData.iloc[1:i, 1])
 
-    return stock_data
+                emaslow, emaslow, macd = macd_calc(
+                    existingData.iloc[1:i, 1])
+                min_macd = min(macd)
+                max_macd = max(macd)
+                if macd[-1] >= 0:
+                    macd_norm = macd[-1] / min_macd
+                elif macd[-1] < 0:
+                    macd_norm = (macd[-1] / min_macd)
+                ema9 = exp_moving_average(macd, nema)
+                rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
+                rsi_mean_change = rsi[-1] - rsi[-2]
+                rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
+                macd_mean_change = np.sum(
+                    np.diff(macd[-n_days:-1]))/(n_day)
+                macd_mean_change = '{:.6f}'.format(macd_mean_change)
+            except Exception as e:
+                pass
+        price = existingData.iloc[-1, 1]
+        temp_pd = pd.DataFrame([[stock, price, rsi[-1], macd[-1], abs(macd[-1]-ema9[-1]), macd_norm, rsi_mean_change]],
+                               columns=['Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
+        stock_data = stock_data.append(temp_pd)
+
+    except Exception as e:
+        print('Could not read stock file {} with error {}'.format(stock, e))
+
+    # return stock_data
 
 
 def browse_and_store_stats(stocks):
-    stock_data = browse_stocks(stocks)
-    #stock_data = stock_data.sort_values(by='RSI mean change', ascending = True)
-    # stock_data.to_csv(os.getcwd() +
-    #                   folder + 'stock_data_test' + '.csv')
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(browse_stocks, stocksToPull)
+    global stock_data
+    # stock_data = browse_stocks(stocks)
+    # stock_data = stock_data.sort_values(by='RSI mean change', ascending = True)
+    stock_data.to_csv(os.getcwd() + folder + 'stock_data_test' + '.csv')
 
 
 # def pull_stored_stock_data():
@@ -503,11 +512,11 @@ def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
     for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
         # print(stock)
         print('Generating plot for stock {} sorted after MACD norm'.format(stock))
-        #graph_data_show(stock, MA1, MA2, start_lim, end_lim)
+        # graph_data_show(stock, MA1, MA2, start_lim, end_lim)
         try:
             graph_data_show(stock, MA1, MA2, start_lim, end_lim)
 
-            #fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
+            # fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
         except:
             pass
 
@@ -533,7 +542,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
         try:
             graph_data_show(stock, MA1, MA2, start_lim, end_lim)
 
-            #fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
+            # fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
         except:
             pass
 
@@ -558,7 +567,7 @@ def main():
         start_time = time.process_time()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(pull_save_stocks, stocksToPull)
-            browse_and_store_stats(stocksToPull)
+        browse_and_store_stats(stocksToPull)
         execution_time = (int)(time.process_time() - start_time)
         print(f"Execution took {execution_time} seconds")
     elif int(alternative) == 4:
@@ -573,4 +582,5 @@ def main():
         exit()
 
 
-main()
+if __name__ == '__main__':
+    main()
