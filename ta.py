@@ -13,6 +13,7 @@ import os
 from tqdm import tqdm
 from indicators import *
 import concurrent.futures
+import time
 
 stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
                  'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AWDR.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BGBIO.OL',
@@ -69,7 +70,7 @@ def saveToFile(data, stock):
 
 
 def pull_save_stocks(stock):
-    # print('Pulling and saving stock data')
+    print(f'Pulling and saving stock {stock}')
     # for stock in tqdm(stocksTopull):
     data = pullData(stock)
     saveToFile(data, stock)
@@ -409,7 +410,7 @@ def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
 def browse_stocks(stocks):
     stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
                               'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
-    print('Calculating stats for stocks')
+    #print(f'Calculating stats for stock {stock}')
     for stock in tqdm(stocks):
         try:
             file_name = os.getcwd() + folder + stock + '.csv'
@@ -548,9 +549,12 @@ def main():
     elif int(alternative) == 2:
         plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stock_to_show)
     elif int(alternative) == 3:
+        start_time = time.clock()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(pull_save_stocks, stocksToPull)
-        browse_and_store_stats(stocksToPull)
+            browse_and_store_stats(stocksToPull)
+        print(f"Execution took: ")
+        print(time.clock() - start_time)
     elif int(alternative) == 4:
         stocks_own = ['SHLF.OL', 'ENTRA.OL', 'EQNR.OL', 'PEN.OL', 'DNB.OL',
                       'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL', 'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
