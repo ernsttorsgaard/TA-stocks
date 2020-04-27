@@ -420,51 +420,51 @@ stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
     'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
 
 
-def browse_stocks(stock):
+def browse_stocks(stocks):
     global stock_data, stats_counter
     stats_counter += 1
-    print(str(stats_counter) + "/" + str(len(stocksToPull)), end=" ")
-    print(f'Calculating stats for stock {stock}')
-    try:
-        file_name = os.getcwd() + folder + stock + '.csv'
-        existingData = pd.read_csv(file_name)
-        # print('Calculating stats for stock: {}'.format(stock))
-        for i in range(len(existingData.iloc[:, 1])):
+    # print(str(stats_counter) + "/" + str(len(stocksToPull)), end=" ")
+    # print(f'Calculating stats for stock {stock}')
+    for stock in tqdm(stocks):
+        try:
+            file_name = os.getcwd() + folder + stock + '.csv'
+            existingData = pd.read_csv(file_name)
+            # print('Calculating stats for stock: {}'.format(stock))
+            for i in range(len(existingData.iloc[:, 1])):
 
-            try:
-                rsi = rsi_func(existingData.iloc[1:i, 1])
+                try:
+                    rsi = rsi_func(existingData.iloc[1:i, 1])
 
-                emaslow, emaslow, macd = macd_calc(
-                    existingData.iloc[1:i, 1])
-                min_macd = min(macd)
-                max_macd = max(macd)
-                if macd[-1] >= 0:
-                    macd_norm = macd[-1] / min_macd
-                elif macd[-1] < 0:
-                    macd_norm = (macd[-1] / min_macd)
-                ema9 = exp_moving_average(macd, nema)
-                rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
-                rsi_mean_change = rsi[-1] - rsi[-2]
-                rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
-                macd_mean_change = np.sum(
-                    np.diff(macd[-n_days:-1]))/(n_day)
-                macd_mean_change = '{:.6f}'.format(macd_mean_change)
-            except Exception as e:
-                pass
-        price = existingData.iloc[-1, 1]
-        temp_pd = pd.DataFrame([[stock, price, rsi[-1], macd[-1], abs(macd[-1]-ema9[-1]), macd_norm, rsi_mean_change]],
-                               columns=['Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
-        stock_data = stock_data.append(temp_pd)
+                    emaslow, emaslow, macd = macd_calc(
+                        existingData.iloc[1:i, 1])
+                    min_macd = min(macd)
+                    max_macd = max(macd)
+                    if macd[-1] >= 0:
+                        macd_norm = macd[-1] / min_macd
+                    elif macd[-1] < 0:
+                        macd_norm = (macd[-1] / min_macd)
+                    ema9 = exp_moving_average(macd, nema)
+                    rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
+                    rsi_mean_change = rsi[-1] - rsi[-2]
+                    rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
+                    macd_mean_change = np.sum(
+                        np.diff(macd[-n_days:-1]))/(n_day)
+                    macd_mean_change = '{:.6f}'.format(macd_mean_change)
+                except Exception as e:
+                    pass
+            price = existingData.iloc[-1, 1]
+            temp_pd = pd.DataFrame([[stock, price, rsi[-1], macd[-1], abs(macd[-1]-ema9[-1]), macd_norm, rsi_mean_change]],
+                                   columns=['Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
+            stock_data = stock_data.append(temp_pd)
 
-    except Exception as e:
-        print('Could not read stock file {} with error {}'.format(stock, e))
+        except Exception as e:
+            print('Could not read stock file {} with error {}'.format(stock, e))
 
     # return stock_data
 
 
 def browse_and_store_stats(stocks):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(browse_stocks, stocksToPull)
+    browse_stocks(stocksToPull)
     global stock_data
     stock_data.to_csv(os.getcwd() + folder + 'stock_data_test' + '.csv')
 
@@ -552,9 +552,14 @@ def main():
         start_time = time.process_time()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(pull_save_stocks, stocksToPull)
+        intermediate_time = (int)(time.process_time() - start_time)
+        intermedate_start_time = time.process_time()
         browse_and_store_stats(stocksToPull)
+        int_time = (int)(time.process_time() - intermedate_start_time)
         execution_time = (int)(time.process_time() - start_time)
-        print(f"Execution took {execution_time} seconds")
+        print(f"Pulling and saving took {intermediate_time} seconds")
+        print(f"Store and browse took {int_time} seconds")
+        print(f"Total execution time: {execution_time} seconds")
     elif int(alternative) == 4:
         stocks_own = ['SHLF.OL', 'ENTRA.OL', 'EQNR.OL', 'PEN.OL', 'DNB.OL',
                       'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL', 'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
