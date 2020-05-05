@@ -27,7 +27,7 @@ stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.O
                  'NOM.OL', 'NANO.OL', 'NOD.OL', 'NHY.OL', 'NORTH.OL', 'NODL.OL', 'NRS.OL', 'NAS.OL', 'NPRO.OL', 'NRC.OL', 'OCY.OL', 'OTS.OL', 'ODL.OL',
                  'ODFB.OL', 'OET.OL', 'OLT.OL', 'ORK.OL', 'OTELLO.OL', 'PARB.OL', 'PCIB.OL', 'PEN.OL', 'PGS.OL', 'PHLY.OL', 'PHO.OL', 'PLCS.OL',
                  'PLT.OL', 'PRS.OL', 'PROTCT.OL', 'QEC.OL', 'RAKP.OL', 'REC.OL', 'SDSD.OL', 'SALM.OL', 'SALMON.OL', 'SADG.OL', 'SAS-NOK.OL',
-                 'SBANK.OL', 'SSHIP.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL',
+                 'SBANK.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL',
                  'SOFF.OL', 'SBVG.OL', 'NONG.OL', 'MING.OL', 'SRBANK.OL', 'SOAG.OL', 'SPOL.OL', 'MORG.OL', 'SOR.OL', 'SVEG.OL', 'SPOG.OL',
                  'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL',
                  'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
@@ -48,12 +48,13 @@ folder = '/Stockmarked/'
 if not os.path.exists(os.getcwd() + folder):
     os.makedirs(os.getcwd() + folder)
 
+start_lim = str(datetime.now().year - 1) + '-' + \
+    str(datetime.now().month) + '-' + str(datetime.now().day)
+
 
 def pullData(stock):
-    start = str(datetime.now().year - 1) + '-' + \
-        str(datetime.now().month) + '-' + str(datetime.now().day)
     try:
-        data = web.DataReader(name=stock, data_source='yahoo', start=start)
+        data = web.DataReader(name=stock, data_source='yahoo', start=start_lim)
         data.sort_index(inplace=True)
 
     except Exception as e:
@@ -534,8 +535,8 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 def main():
 
-    start_lim = str(datetime.now().year - 1) + '-' + \
-        str(datetime.now().month) + '-' + str(datetime.now().day)
+    # start_lim = str(datetime.now().year - 1) + '-' + \
+    #     str(datetime.now().month) + '-' + str(datetime.now().day)
     end_lim = str(datetime.now().strftime('%Y-%m-%d'))
     num_stock_to_show = 25
 
