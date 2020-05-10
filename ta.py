@@ -298,7 +298,7 @@ def browse_stocks(stocks):
                     rsi_mean_change = rsi[-1] - rsi[-2]
                     rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
                     macd_mean_change = np.sum(
-                        np.diff(macd[-n_days:-1]))/(n_day)
+                        np.diff(macd[-n_days:-1]))/(n_days)
                     macd_mean_change = '{:.6f}'.format(macd_mean_change)
                 except Exception as e:
                     pass
