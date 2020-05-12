@@ -2,7 +2,7 @@ import pandas as pd
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -15,6 +15,8 @@ from indicators import *
 import concurrent.futures
 import time
 import multiprocessing
+import logging
+
 
 # list of stocks
 stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
@@ -48,8 +50,19 @@ folder = '/Stockmarked/'
 if not os.path.exists(os.getcwd() + folder):
     os.makedirs(os.getcwd() + folder)
 
-start_lim = str(datetime.now().year - 1) + '-' + \
-    str(datetime.now().month) + '-' + str(datetime.now().day)
+start_lim = str(date.today() - timedelta(days=365))
+
+logger = logging.getLogger(__name__)
+
+
+def set_logger():
+    global logger
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+    file_handler = logging.FileHandler("stock_error.log")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
 
 def pullData(stock):
@@ -58,7 +71,7 @@ def pullData(stock):
         data.sort_index(inplace=True)
 
     except Exception as e:
-        print('Could not pull stock {}. Error {} \n'.format(stock, e))
+        logger.warning('Could not pull stock {}. Error {} \n'.format(stock, e))
         data = pd.DataFrame([0], columns=['empty'])
     return data
 
@@ -164,7 +177,8 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
     try:
         ax.plot(dates[-len(Av3):], Av3, 'red', label=label3, linewidth=1)
     except Exception as e:
-        print('Not enough stock data to plot 100MA for stock {}'.format(stock))
+        logger.warning(
+            'Not enough stock data to plot 100MA for stock {}'.format(stock))
     plt.setp(ax .get_xticklabels(), visible=False, size=8)
     plt.gca().yaxis.set_major_locator(mticker.MaxNLocator(prune='upper'))
     plt.xlabel('Date')
@@ -259,7 +273,8 @@ def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
         file_name = os.getcwd() + folder + stock + '.csv'
         existingData = pd.read_csv(file_name)
     except Exception as e:
-        print('Could not read stock file {} with error {}'.format(stock, e))
+        logger.warning(
+            'Could not read stock file {} with error {}'.format(stock, e))
 
     graph_candlestick_volume_show(
         stock, existingData, MA1, MA2, start_lim, end_lim)
@@ -308,7 +323,8 @@ def browse_stocks(stocks):
             stock_data = stock_data.append(temp_pd)
 
         except Exception as e:
-            print('Could not read stock file {} with error {}'.format(stock, e))
+            logger.warning(
+                'Could not read stock file {} with error {}'.format(stock, e))
 
     # return stock_data
 
@@ -327,7 +343,8 @@ def plot_and_show_selected_stocks(stocks, MA1, MA2, start_lim, end_lim):
             graph_data_show(stock, MA1, MA2, start_lim, end_lim)
 
         except Exception as e:
-            print('Could not read stock file {} with error {}'.format(stock, e))
+            logger.warning(
+                'Could not read stock file {} with error {}'.format(stock, e))
 
 
 def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
@@ -365,7 +382,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
             '/Stockmarked/stock_data_test.csv'
         stock_data = pd.read_csv(file_name)
     except Exception as e:
-        print('Could not read stock file with error {}'.format(e))
+        logger.warning('Could not read stock file with error {}'.format(e))
 
     stock_data_macd_ema9 = stock_data.sort_values(
         by='RSI mean change', ascending=False)
@@ -383,9 +400,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 
 def main():
-
-    # start_lim = str(datetime.now().year - 1) + '-' + \
-    #     str(datetime.now().month) + '-' + str(datetime.now().day)
+    set_logger()
     end_lim = str(datetime.now().strftime('%Y-%m-%d'))
     num_stock_to_show = 25
 

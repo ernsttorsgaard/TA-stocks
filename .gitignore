@@ -2,3 +2,6 @@
 /Stockmarked/
 /venv/
 url.py
+*.log
+req.py
+__pycache__
