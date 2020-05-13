@@ -34,9 +34,6 @@ stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.O
                  'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL',
                  'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
-# nslow = 26
-# nfast = 12
-
 folder = '/Stockmarked/'
 
 if not os.path.exists(os.getcwd() + folder):
@@ -49,7 +46,8 @@ logger = logging.getLogger(__name__)
 def set_logger():
     global logger
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+    formatter = logging.Formatter(
+        "%(created)f:%(levelname)s:%(name)s:%(message)s")
     file_handler = logging.FileHandler("stock_error.log")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
@@ -57,7 +55,7 @@ def set_logger():
 
 
 def pullData(stock):
-    start_lim = str(date.today() - timedelta(days=200))
+    start_lim = str(date.today() - timedelta(days=365))
     try:
         data = web.DataReader(name=stock, data_source='yahoo', start=start_lim)
         data.sort_index(inplace=True)
@@ -86,7 +84,7 @@ def pull_save_stocks(stock):
 
 
 def graph_candlestick_volume_show(stock, existingData):
-    start_lim = str(date.today() - timedelta(days=200))
+    start_lim = str(date.today() - timedelta(days=365))
     MA1 = 20
     MA2 = 60
     MA3 = 100
@@ -148,7 +146,6 @@ def graph_candlestick_volume_show(stock, existingData):
     plt.setp(ax0.get_xticklabels(), visible=False, size=8)
     plt.title('{} Stock'.format(stock), color='w')
     plt.ylabel('RSI')
-
     start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
     start_lim = matplotlib.dates.date2num(start_lim)
     end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
@@ -201,8 +198,6 @@ def graph_candlestick_volume_show(stock, existingData):
 
     ax2 = plt.subplot2grid((7, 4), (5, 0), sharex=ax, rowspan=1, colspan=4)
     fill_col = '#00ffe8'
-    # nslow = 26
-    # nfast = 12
     nema = 9
 
     emaslow, emafast, macd = macd_calc(closep)
@@ -229,10 +224,6 @@ def graph_candlestick_volume_show(stock, existingData):
 
     ax3 = plt.subplot2grid((7, 4), (6, 0), sharex=ax, rowspan=1, colspan=4)
     fill_col = '#00ffe8'
-    # nslow = 26
-    # nfast = 12
-    nema = 9
-
     obv = on_balance_volume(existingData)
 
     ax3.plot(dates[-len(obv):], obv['obv'], color='#4ee6fd', linewidth=1.5)
@@ -252,8 +243,6 @@ def graph_candlestick_volume_show(stock, existingData):
     ax3.tick_params(axis='x', colors='w')
     ax3.tick_params(axis='y', colors='w')
     ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
-    # plt.ylabel('MACD', color='w')
-    # plt.ylabel('MACD', color='w')
 
     plt.subplots_adjust(hspace=0.0, bottom=0.1,
                         top=0.94, right=0.96, left=0.06)
@@ -358,12 +347,9 @@ def plot_macd_change(num_stocks):
         by='MACD norm', ascending=False)
     print(stock_data_macd_ema9[['Stock', 'MACD norm']].iloc[0:num_stocks])
     for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
-        # print(stock)
         print('Generating plot for stock {} sorted after MACD norm'.format(stock))
         try:
             graph_data_show(stock)
-
-            # fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
         except:
             pass
 
@@ -384,12 +370,10 @@ def plot_RSI_change(num_stocks):
     print(stock_data_macd_ema9[[
           'Stock', 'RSI mean change']].iloc[0:num_stocks])
     for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
-        # print(stock)
         print('Generating plot for stock {} sorted after RSI'.format(stock))
         try:
             graph_data_show(stock)
 
-            # fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
         except:
             pass
 
