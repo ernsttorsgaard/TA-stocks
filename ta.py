@@ -34,23 +34,14 @@ stocksToPull = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.O
                  'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL',
                  'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
-nslow = 26
-nfast = 12
-nema = 9
-n_days = 5
-MA1 = 20
-MA2 = 60
-MA3 = 100
-rsi_mean_change_num_days = 5
-rsi_mean_change_threshold_lower = 15
-rsi_mean_change_threshold_upper = 30
-rsi_buy_trigger = 70
+# nslow = 26
+# nfast = 12
+
 folder = '/Stockmarked/'
 
 if not os.path.exists(os.getcwd() + folder):
     os.makedirs(os.getcwd() + folder)
 
-start_lim = str(date.today() - timedelta(days=365))
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +57,7 @@ def set_logger():
 
 
 def pullData(stock):
+    start_lim = str(date.today() - timedelta(days=200))
     try:
         data = web.DataReader(name=stock, data_source='yahoo', start=start_lim)
         data.sort_index(inplace=True)
@@ -93,8 +85,12 @@ def pull_save_stocks(stock):
     saveToFile(data, stock)
 
 
-def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_lim):
-
+def graph_candlestick_volume_show(stock, existingData):
+    start_lim = str(date.today() - timedelta(days=200))
+    MA1 = 20
+    MA2 = 60
+    MA3 = 100
+    end_lim = str(datetime.now().strftime('%Y-%m-%d'))
     dates_string = existingData.iloc[:, 0]
     dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
     xs = matplotlib.dates.date2num(dates)
@@ -205,8 +201,8 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
 
     ax2 = plt.subplot2grid((7, 4), (5, 0), sharex=ax, rowspan=1, colspan=4)
     fill_col = '#00ffe8'
-    nslow = 26
-    nfast = 12
+    # nslow = 26
+    # nfast = 12
     nema = 9
 
     emaslow, emafast, macd = macd_calc(closep)
@@ -233,8 +229,8 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
 
     ax3 = plt.subplot2grid((7, 4), (6, 0), sharex=ax, rowspan=1, colspan=4)
     fill_col = '#00ffe8'
-    nslow = 26
-    nfast = 12
+    # nslow = 26
+    # nfast = 12
     nema = 9
 
     obv = on_balance_volume(existingData)
@@ -268,7 +264,7 @@ def graph_candlestick_volume_show(stock, existingData, MA1, MA2, start_lim, end_
     plt.show()
 
 
-def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
+def graph_data_show(stock):
     try:
         file_name = os.getcwd() + folder + stock + '.csv'
         existingData = pd.read_csv(file_name)
@@ -276,8 +272,7 @@ def graph_data_show(stock, MA1, MA2, start_lim, end_lim):
         logger.warning(
             'Could not read stock file {} with error {}'.format(stock, e))
 
-    graph_candlestick_volume_show(
-        stock, existingData, MA1, MA2, start_lim, end_lim)
+    graph_candlestick_volume_show(stock, existingData)
 
 
 stats_counter = 0
@@ -287,6 +282,7 @@ stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
 
 def browse_stocks(stocks):
     global stock_data, stats_counter
+    n_days, nema = 5, 9
     stats_counter += 1
     # print(str(stats_counter) + "/" + str(len(stocksToPull)), end=" ")
     # print(f'Calculating stats for stock {stock}')
@@ -335,19 +331,19 @@ def browse_and_store_stats(stocks):
     stock_data.to_csv(os.getcwd() + folder + 'stock_data_test' + '.csv')
 
 
-def plot_and_show_selected_stocks(stocks, MA1, MA2, start_lim, end_lim):
+def plot_and_show_selected_stocks(stocks):
 
     for stock in stocks:
         try:
             print('Stock {}'.format(stock))
-            graph_data_show(stock, MA1, MA2, start_lim, end_lim)
+            graph_data_show(stock)
 
         except Exception as e:
             logger.warning(
                 'Could not read stock file {} with error {}'.format(stock, e))
 
 
-def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
+def plot_macd_change(num_stocks):
     pd.options.display.float_format = '{:.5f}'.format
     [os.remove(file) for file in os.listdir(
         os.getcwd() + folder) if file.endswith('_macd_change.png')]
@@ -364,16 +360,15 @@ def plot_macd_change(MA1, MA2, start_lim, end_lim, num_stocks):
     for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
         # print(stock)
         print('Generating plot for stock {} sorted after MACD norm'.format(stock))
-        # graph_data_show(stock, MA1, MA2, start_lim, end_lim)
         try:
-            graph_data_show(stock, MA1, MA2, start_lim, end_lim)
+            graph_data_show(stock)
 
             # fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
         except:
             pass
 
 
-def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
+def plot_RSI_change(num_stocks):
     pd.options.display.float_format = '{:.5f}'.format
     [os.remove(file) for file in os.listdir(
         os.getcwd() + folder) if file.endswith('_macd_change.png')]
@@ -392,7 +387,7 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
         # print(stock)
         print('Generating plot for stock {} sorted after RSI'.format(stock))
         try:
-            graph_data_show(stock, MA1, MA2, start_lim, end_lim)
+            graph_data_show(stock)
 
             # fig.savefig('{}_macd.png'.format(stock), bbox_inches = "tight")
         except:
@@ -401,7 +396,6 @@ def plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stocks):
 
 def main():
     set_logger()
-    end_lim = str(datetime.now().strftime('%Y-%m-%d'))
     num_stock_to_show = 25
 
     alternative = input(
@@ -410,9 +404,9 @@ def main():
         print("Wrong input, try again: ")
         alternative = input(">> ")
     if int(alternative) == 1:
-        plot_macd_change(MA1, MA2, start_lim, end_lim, num_stock_to_show)
+        plot_macd_change(num_stock_to_show)
     elif int(alternative) == 2:
-        plot_RSI_change(MA1, MA2, start_lim, end_lim, num_stock_to_show)
+        plot_RSI_change(num_stock_to_show)
     elif int(alternative) == 3:
         start_time = time.process_time()
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -430,9 +424,8 @@ def main():
                       'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL', 'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
         stocks_watch = []
 
-        plot_and_show_selected_stocks(stocks_own, MA1, MA2, start_lim, end_lim)
-        plot_and_show_selected_stocks(
-            stocks_watch, MA1, MA2, start_lim, end_lim)
+        plot_and_show_selected_stocks(stocks_own)
+        plot_and_show_selected_stocks(stocks_watch)
     elif int(alternative) == 5:
         exit()
 
