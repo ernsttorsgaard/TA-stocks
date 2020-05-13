@@ -7,7 +7,7 @@ from mpl_finance import candlestick_ohlc
 import math
 import os
 from tqdm import tqdm
-from indicators import *
+import indicators
 import concurrent.futures
 import time
 import multiprocessing
@@ -102,9 +102,9 @@ def graph_candlestick_volume_show(stock, existingData):
         'Date', 'Open', 'High', 'Low', 'Close']].values]
     volume = existingData.iloc[:, 5]
 
-    Av1 = moving_average(closep, MA1)
-    Av2 = moving_average(closep, MA2)
-    Av3 = moving_average(closep, MA3)
+    Av1 = indicators.moving_average(closep, MA1)
+    Av2 = indicators.moving_average(closep, MA2)
+    Av3 = indicators.moving_average(closep, MA3)
 
     SP = len(dates[MA3 - 1:])
 
@@ -119,7 +119,7 @@ def graph_candlestick_volume_show(stock, existingData):
 
     ax0 = plt.subplot2grid((7, 4), (0, 0), rowspan=1, colspan=4)
 
-    rsi = rsi_func(closep)
+    rsi = indicators.rsi_func(closep)
     ax0.plot(dates[-SP:], rsi[-SP:], rsiCol, linewidth=1)
     ax0.axhline(70, color=negCol, linewidth=0.5)
     ax0.axhline(30, color=posCol, linewidth=0.5)
@@ -196,8 +196,8 @@ def graph_candlestick_volume_show(stock, existingData):
     fill_col = '#00ffe8'
     nema = 9
 
-    emaslow, emafast, macd = macd_calc(closep)
-    ema9 = exp_moving_average(macd, nema)
+    emaslow, emafast, macd = indicators.macd_calc(closep)
+    ema9 = indicators.exp_moving_average(macd, nema)
     ppo = (emafast - emaslow)/emaslow*100
     ppo_ema9 = (ema9)/emaslow*100
 
@@ -220,7 +220,7 @@ def graph_candlestick_volume_show(stock, existingData):
 
     ax3 = plt.subplot2grid((7, 4), (6, 0), sharex=ax, rowspan=1, colspan=4)
     fill_col = '#00ffe8'
-    obv = on_balance_volume(existingData)
+    obv = indicators.on_balance_volume(existingData)
 
     ax3.plot(dates[-len(obv):], obv['obv'], color='#4ee6fd', linewidth=1.5)
     ax3.plot(dates[-len(obv):], obv['obv_ema21'], color='white', linewidth=1)
@@ -279,9 +279,9 @@ def browse_stocks(stocks):
             existingData = pd.read_csv(file_name)
             for i in range(len(existingData.iloc[:, 1])):
                 try:
-                    rsi = rsi_func(existingData.iloc[1:i, 1])
+                    rsi = indicators.rsi_func(existingData.iloc[1:i, 1])
 
-                    emaslow, emaslow, macd = macd_calc(
+                    emaslow, emaslow, macd = indicators.macd_calc(
                         existingData.iloc[1:i, 1])
                     min_macd = min(macd)
                     max_macd = max(macd)
@@ -289,7 +289,7 @@ def browse_stocks(stocks):
                         macd_norm = macd[-1] / min_macd
                     elif macd[-1] < 0:
                         macd_norm = (macd[-1] / min_macd)
-                    ema9 = exp_moving_average(macd, nema)
+                    ema9 = indicators.exp_moving_average(macd, nema)
                     rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
                     rsi_mean_change = rsi[-1] - rsi[-2]
                     rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
