@@ -311,8 +311,6 @@ def browse_stocks(stocks):
             logger.warning(
                 'Could not read stock file {} with error {}'.format(stock, e))
 
-    # return stock_data
-
 
 def browse_and_store_stats(stocks):
     browse_stocks(stocksToPull)
