@@ -1,12 +1,8 @@
 import pandas as pd
 import pandas_datareader.data as web
-import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime, date, timedelta
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import matplotlib.dates as mdates
+from matplotlib import pyplot as plt, ticker as m_ticker, dates as m_dates
 from mpl_finance import candlestick_ohlc
 import math
 import os
@@ -47,7 +43,7 @@ def set_logger():
     global logger
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
-        "%(created)f:%(levelname)s:%(name)s:%(message)s")
+        "%(asctime)s:%(levelname)s:%(name)s:%(message)s")
     file_handler = logging.FileHandler("stock_error.log")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
@@ -91,7 +87,7 @@ def graph_candlestick_volume_show(stock, existingData):
     end_lim = str(datetime.now().strftime('%Y-%m-%d'))
     dates_string = existingData.iloc[:, 0]
     dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
-    xs = matplotlib.dates.date2num(dates)
+    xs = m_dates.date2num(dates)
 
     openp = existingData.iloc[:, 1]
     highp = existingData.iloc[:, 2]
@@ -99,7 +95,7 @@ def graph_candlestick_volume_show(stock, existingData):
     closep = existingData.iloc[:, 4]
     volume = existingData.iloc[:, 5]
 
-    hfmt = matplotlib.dates.DateFormatter('%d-%m-%Y')
+    hfmt = m_dates.DateFormatter('%d-%m-%Y')
 
     existingData['Date'] = xs
     quotes = [tuple(x) for x in existingData[[
@@ -147,9 +143,9 @@ def graph_candlestick_volume_show(stock, existingData):
     plt.title('{} Stock'.format(stock), color='w')
     plt.ylabel('RSI')
     start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
-    start_lim = matplotlib.dates.date2num(start_lim)
+    start_lim = m_dates.date2num(start_lim)
     end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
-    end_lim = matplotlib.dates.date2num(end_lim)
+    end_lim = m_dates.date2num(end_lim)
     ax = plt.subplot2grid((7, 4), (1, 0), rowspan=4, sharex=ax0, colspan=4)
     ax.set_facecolor('#07000d')
     plt.xlim(left=start_lim, right=end_lim)
@@ -173,12 +169,12 @@ def graph_candlestick_volume_show(stock, existingData):
         logger.warning(
             'Not enough stock data to plot 100MA for stock {}'.format(stock))
     plt.setp(ax .get_xticklabels(), visible=False, size=8)
-    plt.gca().yaxis.set_major_locator(mticker.MaxNLocator(prune='upper'))
+    plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
     plt.xlabel('Date')
     plt.ylabel('Price and Volume')
     plt.grid()
     ax.xaxis_date()
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    ax.xaxis.set_major_formatter(m_dates.DateFormatter("%Y-%m-%d"))
 
     maLeg = plt.legend(loc=9, ncol=2, borderaxespad=0,
                        fancybox=True, prop={'size': 7})
@@ -211,7 +207,7 @@ def graph_candlestick_volume_show(stock, existingData):
              color='w', transform=ax2.transAxes)
     ax2.fill_between(dates, ppo-ppo_ema9, 0, alpha=0.5,
                      facecolor=fill_col, edgecolor=fill_col)
-    plt.gca().yaxis.set_major_locator(mticker.MaxNLocator(prune='upper'))
+    plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
     ax2.set_facecolor('#07000d')
     plt.xlim(left=start_lim, right=end_lim)
     ax2.spines['bottom'].set_color('#5998ff')
@@ -220,7 +216,7 @@ def graph_candlestick_volume_show(stock, existingData):
     ax2.spines['right'].set_color('#5998ff')
     ax2.tick_params(axis='x', colors='w')
     ax2.tick_params(axis='y', colors='w')
-    ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+    ax2.yaxis.set_major_locator(m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
     ax3 = plt.subplot2grid((7, 4), (6, 0), sharex=ax, rowspan=1, colspan=4)
     fill_col = '#00ffe8'
@@ -230,7 +226,7 @@ def graph_candlestick_volume_show(stock, existingData):
     ax3.plot(dates[-len(obv):], obv['obv_ema21'], color='white', linewidth=1)
     ax3.text(0.015, 0.95, 'OBV (21)', va='top',
              color='w', transform=ax3.transAxes)
-    plt.gca().yaxis.set_major_locator(mticker.MaxNLocator(prune='upper'))
+    plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
     ax3.set_facecolor('#07000d')
     plt.xlim(left=start_lim, right=end_lim)
     ylim_low = min(obv['obv'].iloc[-300:-1])
@@ -242,7 +238,7 @@ def graph_candlestick_volume_show(stock, existingData):
     ax3.spines['right'].set_color('#5998ff')
     ax3.tick_params(axis='x', colors='w')
     ax3.tick_params(axis='y', colors='w')
-    ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+    ax3.yaxis.set_major_locator(m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
     plt.subplots_adjust(hspace=0.0, bottom=0.1,
                         top=0.94, right=0.96, left=0.06)
@@ -253,24 +249,26 @@ def graph_candlestick_volume_show(stock, existingData):
     plt.show()
 
 
-def graph_data_show(stock):
-    try:
-        file_name = os.getcwd() + folder + stock + '.csv'
-        existingData = pd.read_csv(file_name)
-    except Exception as e:
-        logger.warning(
-            'Could not read stock file {} with error {}'.format(stock, e))
+def graph_data_show(stocks):
+    for stock in stocks:
+        try:
+            print('Stock {}'.format(stock))
+            file_name = os.getcwd() + folder + stock + '.csv'
+            existingData = pd.read_csv(file_name)
+        except Exception as e:
+            logger.warning(
+                'Could not read stock file {} with error {}'.format(stock, e))
 
-    graph_candlestick_volume_show(stock, existingData)
+        graph_candlestick_volume_show(stock, existingData)
 
 
-stats_counter = 0
 stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
     'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
 
 
 def browse_stocks(stocks):
-    global stock_data, stats_counter
+    global stock_data
+    stats_counter = 0
     n_days, nema = 5, 9
     stats_counter += 1
     # print(str(stats_counter) + "/" + str(len(stocksToPull)), end=" ")
@@ -279,9 +277,7 @@ def browse_stocks(stocks):
         try:
             file_name = os.getcwd() + folder + stock + '.csv'
             existingData = pd.read_csv(file_name)
-            # print('Calculating stats for stock: {}'.format(stock))
             for i in range(len(existingData.iloc[:, 1])):
-
                 try:
                     rsi = rsi_func(existingData.iloc[1:i, 1])
 
@@ -306,24 +302,8 @@ def browse_stocks(stocks):
             temp_pd = pd.DataFrame([[stock, price, rsi[-1], macd[-1], abs(macd[-1]-ema9[-1]), macd_norm, rsi_mean_change]],
                                    columns=['Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
             stock_data = stock_data.append(temp_pd)
-
-        except Exception as e:
-            logger.warning(
-                'Could not read stock file {} with error {}'.format(stock, e))
-
-
-def browse_and_store_stats(stocks):
-    browse_stocks(stocksToPull)
-    global stock_data
-    stock_data.to_csv(os.getcwd() + folder + 'stock_data_test' + '.csv')
-
-
-def plot_and_show_selected_stocks(stocks):
-
-    for stock in stocks:
-        try:
-            print('Stock {}'.format(stock))
-            graph_data_show(stock)
+            stock_data.to_csv(os.getcwd() + folder +
+                              'stock_data_test' + '.csv')
 
         except Exception as e:
             logger.warning(
@@ -343,13 +323,9 @@ def plot_macd_change(num_stocks):
 
     stock_data_macd_ema9 = stock_data.sort_values(
         by='MACD norm', ascending=False)
+    print('Generating plot for following stocks sorted after MACD norm')
     print(stock_data_macd_ema9[['Stock', 'MACD norm']].iloc[0:num_stocks])
-    for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
-        print('Generating plot for stock {} sorted after MACD norm'.format(stock))
-        try:
-            graph_data_show(stock)
-        except:
-            pass
+    graph_data_show(stock_data_macd_ema9['Stock'].iloc[0:num_stocks])
 
 
 def plot_RSI_change(num_stocks):
@@ -365,19 +341,13 @@ def plot_RSI_change(num_stocks):
 
     stock_data_macd_ema9 = stock_data.sort_values(
         by='RSI mean change', ascending=False)
+    print('Generating plot for the following stocks sorted after RSI')
     print(stock_data_macd_ema9[[
           'Stock', 'RSI mean change']].iloc[0:num_stocks])
-    for stock in stock_data_macd_ema9['Stock'].iloc[0:num_stocks]:
-        print('Generating plot for stock {} sorted after RSI'.format(stock))
-        try:
-            graph_data_show(stock)
-
-        except:
-            pass
+    graph_data_show(stock_data_macd_ema9['Stock'].iloc[0:num_stocks])
 
 
-def main():
-    set_logger()
+def user_input():
     num_stock_to_show = 25
 
     alternative = input(
@@ -395,7 +365,7 @@ def main():
             executor.map(pull_save_stocks, stocksToPull)
         intermediate_time = (int)(time.process_time() - start_time)
         intermedate_start_time = time.process_time()
-        browse_and_store_stats(stocksToPull)
+        browse_stocks(stocksToPull)
         int_time = (int)(time.process_time() - intermedate_start_time)
         execution_time = (int)(time.process_time() - start_time)
         print(f"Pulling and saving took {intermediate_time} seconds")
@@ -406,10 +376,15 @@ def main():
                       'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL', 'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
         stocks_watch = []
 
-        plot_and_show_selected_stocks(stocks_own)
-        plot_and_show_selected_stocks(stocks_watch)
+        graph_data_show(stocks_own)
+        graph_data_show(stocks_watch)
     elif int(alternative) == 5:
         exit()
+
+
+def main():
+    set_logger()
+    user_input()
 
 
 if __name__ == '__main__':
