@@ -14,6 +14,18 @@ import multiprocessing
 import logging
 
 
+class Logger:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            "%(asctime)s:%(levelname)s:%(name)s:%(message)s")
+        file_handler = logging.FileHandler("stock_error.log")
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+
+
 class Stock:
 
     obx_stocks = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
@@ -36,6 +48,7 @@ class Stock:
     stock_counter = 0
     stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
         'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
+    logger = Logger()
 
     if not os.path.exists(os.getcwd() + stock_folder):
         os.makedirs(os.getcwd() + stock_folder)
@@ -47,7 +60,7 @@ class Stock:
             data.sort_index(inplace=True)
 
         except Exception as e:
-            print(
+            self.logger.logger.warning(
                 'Could not pull stock {}. Error {} \n'.format(stock, e))
             data = pd.DataFrame([0], columns=['empty'])
         return data
@@ -64,7 +77,7 @@ class Stock:
         data = self.pull_stocks(stock)
         self.save_stocks_to_file(data, stock)
 
-    def browse_stocks(self, stocks, logger):
+    def browse_stocks(self, stocks):
         n_days, nema = 5, 9
         for stock in tqdm(stocks):
             try:
@@ -97,20 +110,8 @@ class Stock:
                                        'stock_data_test' + '.csv')
 
             except Exception as e:
-                logger.warning(
+                self.logger.logger.warning(
                     'Could not read stock file {} with error {}'.format(stock, e))
-
-
-class Logger:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            "%(asctime)s:%(levelname)s:%(name)s:%(message)s")
-        file_handler = logging.FileHandler("stock_error.log")
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
 
 
 class Plotter():
@@ -118,7 +119,7 @@ class Plotter():
         self.stock = Stock()
         self.logger = Logger()
 
-    def graph_candlestick_volume_show(self, stock, existingData, logger):
+    def graph_candlestick_volume_show(self, stock, existingData):
         start_lim = str(date.today() - timedelta(days=365))
         MA1 = 20
         MA2 = 60
@@ -205,7 +206,7 @@ class Plotter():
         try:
             ax.plot(dates[-len(Av3):], Av3, 'red', label=label3, linewidth=1)
         except Exception as e:
-            logger.warning(
+            self.logger.logger.warning(
                 'Not enough stock data to plot 100MA for stock {}'.format(stock))
         plt.setp(ax .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
@@ -291,22 +292,22 @@ class Plotter():
 
         plt.show()
 
-    def graph_data_show(self, stocks, logger):
+    def graph_data_show(self, stocks):
         for stock in stocks:
             try:
                 print('Stock {}'.format(stock))
                 file_name = os.getcwd() + self.stock.stock_folder + stock + '.csv'
                 existingData = pd.read_csv(file_name)
             except Exception as e:
-                logger.warning(
+                self.logger.logger.warning(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
-            self.graph_candlestick_volume_show(stock, existingData, logger)
+            self.graph_candlestick_volume_show(stock, existingData)
 
         stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
             'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
 
-    def plot_macd_change(self, num_stocks, logger):
+    def plot_macd_change(self, num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
         [os.remove(file) for file in os.listdir(
             os.getcwd() + self.stock.stock_folder) if file.endswith('_macd_change.png')]
@@ -314,16 +315,17 @@ class Plotter():
             file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            print('Could not read stock file with error {}'.format(e))
+            self.logger.logger.warning(
+                'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
             by='MACD norm', ascending=False)
         print('Generating plot for following stocks sorted after MACD norm')
         print(stock_data_macd_ema9[['Stock', 'MACD norm']].iloc[0:num_stocks])
         self.graph_data_show(
-            stock_data_macd_ema9['Stock'].iloc[0:num_stocks], logger)
+            stock_data_macd_ema9['Stock'].iloc[0:num_stocks])
 
-    def plot_RSI_change(self, num_stocks, logger):
+    def plot_RSI_change(self, num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
         [os.remove(file) for file in os.listdir(
             os.getcwd() + self.stock.stock_folder) if file.endswith('_macd_change.png')]
@@ -331,7 +333,8 @@ class Plotter():
             file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            logger.warning('Could not read stock file with error {}'.format(e))
+            self.logger.logger.warning(
+                'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
             by='RSI mean change', ascending=False)
@@ -339,7 +342,7 @@ class Plotter():
         print(stock_data_macd_ema9[[
             'Stock', 'RSI mean change']].iloc[0:num_stocks])
         self.graph_data_show(
-            stock_data_macd_ema9['Stock'].iloc[0:num_stocks], logger)
+            stock_data_macd_ema9['Stock'].iloc[0:num_stocks])
 
 
 class UserInput():
@@ -347,7 +350,6 @@ class UserInput():
 
     def __init__(self):
         self.plotter = Plotter()
-        self.logger = Logger()
         self.stock = Stock()
 
     def user_input(self):
@@ -358,10 +360,10 @@ class UserInput():
             alternative = input(">> ")
         if int(alternative) == 1:
             self.plotter.plot_macd_change(
-                self.num_stock_to_show, self.logger.logger)
+                self.num_stock_to_show)
         elif int(alternative) == 2:
             self.plotter.plot_RSI_change(
-                self.num_stock_to_show, self.logger.logger)
+                self.num_stock_to_show)
         elif int(alternative) == 3:
             start_time = time.process_time()
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -369,7 +371,7 @@ class UserInput():
                              self.stock.obx_stocks)
             intermediate_time = round(time.process_time() - start_time, 1)
             intermedate_start_time = time.process_time()
-            self.stock.browse_stocks(self.stock.obx_stocks, self.logger.logger)
+            self.stock.browse_stocks(self.stock.obx_stocks)
             int_time = round(time.process_time() - intermedate_start_time, 1)
             execution_time = round(time.process_time() - start_time, 1)
             print(f"Pulling and saving took {intermediate_time} seconds")
@@ -381,8 +383,8 @@ class UserInput():
                           'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
             stocks_watch = []
 
-            self.plotter.graph_data_show(stocks_own, self.logger.logger)
-            self.plotter.graph_data_show(stocks_watch, self.logger.logger)
+            self.plotter.graph_data_show(stocks_own)
+            self.plotter.graph_data_show(stocks_watch)
         elif int(alternative) == 5:
             exit()
 
