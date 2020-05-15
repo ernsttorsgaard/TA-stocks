@@ -25,10 +25,13 @@ class Logger:
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
 
+    def log_error(self, err_msg):
+        self.logger.warning(err_msg)
+
 
 class Stock:
 
-    obx_stocks = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
+    obx_stocks = (['VOW.OL', 'FIVasdadadEPG.OLa', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
                    'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AWDR.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BGBIO.OL',
                    'BIOTEC.OL', 'BON.OL', 'BDRILL.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'COV.OL', 'CRAYON.OL', 'DNB.OL',
                    'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'TIETOO.OL', 'FJORD.OL',
@@ -60,7 +63,7 @@ class Stock:
             data.sort_index(inplace=True)
 
         except Exception as e:
-            self.logger.logger.warning(
+            self.logger.log_error(
                 'Could not pull stock {}. Error {} \n'.format(stock, e))
             data = pd.DataFrame([0], columns=['empty'])
         return data
@@ -110,7 +113,7 @@ class Stock:
                                        'stock_data_test' + '.csv')
 
             except Exception as e:
-                self.logger.logger.warning(
+                self.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
 
@@ -121,13 +124,10 @@ class Plotter():
 
     def graph_candlestick_volume_show(self, stock, existingData):
         start_lim = str(date.today() - timedelta(days=365))
-        MA1 = 20
-        MA2 = 60
-        MA3 = 100
         end_lim = str(datetime.now().strftime('%Y-%m-%d'))
         dates_string = existingData.iloc[:, 0]
         dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
-        xs = m_dates.date2num(dates)
+        existingData['Date'] = m_dates.date2num(dates)
 
         openp = existingData.iloc[:, 1]
         highp = existingData.iloc[:, 2]
@@ -135,22 +135,15 @@ class Plotter():
         closep = existingData.iloc[:, 4]
         volume = existingData.iloc[:, 5]
 
-        hfmt = m_dates.DateFormatter('%d-%m-%Y')
-
-        existingData['Date'] = xs
         quotes = [tuple(x) for x in existingData[[
             'Date', 'Open', 'High', 'Low', 'Close']].values]
-        volume = existingData.iloc[:, 5]
 
-        Av1 = indicators.moving_average(closep, MA1)
-        Av2 = indicators.moving_average(closep, MA2)
-        Av3 = indicators.moving_average(closep, MA3)
+        mov_avg_20 = indicators.moving_average(closep, window=20)
+        mov_avg_60 = indicators.moving_average(closep, window=60)
+        mov_avg_100 = indicators.moving_average(closep, window=100)
 
-        SP = len(dates[MA3 - 1:])
+        SP = len(dates[100 - 1:])
 
-        label1 = str(MA1) + ' SMA'
-        label2 = str(MA2) + ' SMA'
-        label3 = str(MA3) + ' SMA'
         rsiCol = '#c1f9f7'
         posCol = '#386d13'
         negCol = '#8f2020'
@@ -201,12 +194,15 @@ class Plotter():
         ax.tick_params(axis='x', colors='w')
         candlestick_ohlc(ax, quotes, width=0.75,
                          colorup='#53C156', colordown='#ff1717')
-        ax.plot(dates[-len(Av1):], Av1, '#e1edf9', label=label1, linewidth=1)
-        ax.plot(dates[-len(Av2):], Av2, '#4ee6fd', label=label2, linewidth=1)
+        ax.plot(dates[-len(mov_avg_20):], mov_avg_20,
+                '#e1edf9', label='20 SMA', linewidth=1)
+        ax.plot(dates[-len(mov_avg_60):], mov_avg_60,
+                '#4ee6fd', label='60 SMA', linewidth=1)
         try:
-            ax.plot(dates[-len(Av3):], Av3, 'red', label=label3, linewidth=1)
+            ax.plot(dates[-len(mov_avg_100):], mov_avg_100,
+                    'red', label='100 SMA', linewidth=1)
         except Exception as e:
-            self.logger.logger.warning(
+            self.logger.log_error(
                 'Not enough stock data to plot 100MA for stock {}'.format(stock))
         plt.setp(ax .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
@@ -299,7 +295,7 @@ class Plotter():
                 file_name = os.getcwd() + self.stock.stock_folder + stock + '.csv'
                 existingData = pd.read_csv(file_name)
             except Exception as e:
-                self.logger.logger.warning(
+                self.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
             self.graph_candlestick_volume_show(stock, existingData)
@@ -315,7 +311,7 @@ class Plotter():
             file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            self.logger.logger.warning(
+            self.logger.log_error(
                 'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
@@ -333,7 +329,7 @@ class Plotter():
             file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            self.logger.logger.warning(
+            self.logger.log_error(
                 'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
