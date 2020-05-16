@@ -129,12 +129,7 @@ class Plotter():
         dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
         existingData['Date'] = m_dates.date2num(dates)
 
-        openp = existingData.iloc[:, 1]
-        highp = existingData.iloc[:, 2]
-        lowp = existingData.iloc[:, 3]
-        closep = existingData.iloc[:, 4]
-        volume = existingData.iloc[:, 5]
-
+        close_price = existingData.loc[:, "Close"]
         quotes = [tuple(x) for x in existingData[[
             'Date', 'Open', 'High', 'Low', 'Close']].values]
 
@@ -143,7 +138,7 @@ class Plotter():
 
         # RSI
         SP = len(dates[100 - 1:])
-        rsi = indicators.rsi_func(closep)
+        rsi = indicators.rsi_func(close_price)
         ax_rsi = plt.subplot2grid(
             shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
 
@@ -170,11 +165,11 @@ class Plotter():
         plt.title('{} Stock'.format(stock), color='w')
         plt.ylabel('RSI')
 
-        # MACD
+        # Candlesticks
 
-        mov_avg_20 = indicators.moving_average(closep, window=20)
-        mov_avg_60 = indicators.moving_average(closep, window=60)
-        mov_avg_100 = indicators.moving_average(closep, window=100)
+        mov_avg_20 = indicators.moving_average(close_price, window=20)
+        mov_avg_60 = indicators.moving_average(close_price, window=60)
+        mov_avg_100 = indicators.moving_average(close_price, window=100)
 
         start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
         start_lim = m_dates.date2num(start_lim)
@@ -183,8 +178,8 @@ class Plotter():
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
         ax_can_sticks.set_facecolor('#07000d')
-        ylim_low = min(closep[-300:-1])*0.8
-        ylim_high = max(closep[-300:-1])*1.1
+        ylim_low = min(close_price[-300:-1])*0.8
+        ylim_high = max(close_price[-300:-1])*1.1
         plt.ylim(ylim_low, ylim_high)
         ax_can_sticks.yaxis.label.set_color('w')
         ax_can_sticks.spines['bottom'].set_color('#5998ff')
@@ -219,9 +214,9 @@ class Plotter():
         maLeg.get_frame().set_alpha(0.4)
 
         # Volume
-        volumeMin = 0
+        volume = existingData.loc[:, "Volume"]
         ax_vol = ax_can_sticks.twinx()
-        ax_vol.fill_between(dates, volumeMin, volume,
+        ax_vol.fill_between(dates, 0, volume,
                             facecolor='#00ffe8', alpha=0.5)
         ax_vol.axes.yaxis.set_ticklabels([])
         ax_vol.set_ylim(0, 2*volume.max())
@@ -236,10 +231,9 @@ class Plotter():
 
         ax_ppo = plt.subplot2grid(shape=(7, 1), loc=(
             5, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
-        fill_col = '#00ffe8'
         nema = 9
 
-        emaslow, emafast, macd = indicators.macd_calc(closep)
+        emaslow, emafast, macd = indicators.macd_calc(close_price)
         ema9 = indicators.exp_moving_average(macd, nema)
         ppo = (emafast - emaslow)/emaslow*100
         ppo_ema9 = (ema9)/emaslow*100
@@ -249,7 +243,7 @@ class Plotter():
         ax_ppo.text(0.015, 0.95, 'PPO (12,26,9)', va='top',
                     color='w', transform=ax_ppo.transAxes)
         ax_ppo.fill_between(dates, ppo-ppo_ema9, 0, alpha=0.5,
-                            facecolor=fill_col, edgecolor=fill_col)
+                            facecolor='#00ffe8', edgecolor='#00ffe8')
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
         ax_ppo.set_facecolor('#07000d')
         ax_ppo.spines['bottom'].set_color('#5998ff')
@@ -265,7 +259,6 @@ class Plotter():
 
         ax_obv = plt.subplot2grid(shape=(7, 1), loc=(
             6, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
-        fill_col = '#00ffe8'
         obv = indicators.on_balance_volume(existingData)
 
         ax_obv.plot(dates[-len(obv):], obv['obv'],
