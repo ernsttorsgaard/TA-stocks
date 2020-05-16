@@ -3,7 +3,7 @@ import pandas_datareader.data as web
 import numpy as np
 from datetime import datetime, date, timedelta
 from matplotlib import pyplot as plt, ticker as m_ticker, dates as m_dates
-from mpl_finance import candlestick_ohlc
+import mpl_finance
 import math
 import os
 from tqdm import tqdm
@@ -31,7 +31,7 @@ class Logger:
 
 class Stock:
 
-    obx_stocks = (['VOW.OL', 'FIVasdadadEPG.OLa', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
+    obx_stocks = (['VOW.OL', 'FIVEPG.OL', 'ASC.OL', 'AFG.OL', 'AKER.OL', 'AKERBP.OL', 'AKSO.OL', 'ARCHER.OL', 'ARCUS.OL',
                    'ASETEK.OL', 'ATEA.OL',  'AUSS.OL', 'AVANCE.OL', 'AWDR.OL', 'AXA.OL', 'B2H.OL', 'BAKKA.OL', 'BGBIO.OL',
                    'BIOTEC.OL', 'BON.OL', 'BDRILL.OL', 'BRG.OL', 'BOUVET.OL', 'BWLPG.OL', 'BWO.OL', 'COV.OL', 'CRAYON.OL', 'DNB.OL',
                    'DNO.OL', 'DOF.OL', 'EAM.OL', 'EIOF.OL', 'EMGS.OL', 'ELE.OL', 'ELK.OL', 'ENTRA.OL', 'EQNR.OL', 'EPR.OL', 'TIETOO.OL', 'FJORD.OL',
@@ -43,7 +43,7 @@ class Stock:
                    'PLT.OL', 'PRS.OL', 'PROTCT.OL', 'QEC.OL', 'RAKP.OL', 'REC.OL', 'SDSD.OL', 'SALM.OL', 'SALMON.OL', 'SADG.OL', 'SAS-NOK.OL',
                    'SBANK.OL', 'SSO.OL', 'SCHA.OL', 'SCHB.OL', 'SBX.OL', 'SDRL.OL', 'SSG.OL', 'SBO.OL', 'SHLF.OL', 'SKUE.OL', 'SOLON.OL',
                    'SOFF.OL', 'SBVG.OL', 'NONG.OL', 'MING.OL', 'SRBANK.OL', 'SOAG.OL', 'SPOL.OL', 'MORG.OL', 'SOR.OL', 'SVEG.OL', 'SPOG.OL',
-                   'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'SSC.OL', 'THIN.OL', 'TOM.OL',
+                   'SBLK.OL', 'SNI.OL', 'STB.OL', 'STRONG.OL', 'SUBC.OL', 'TRVX.OL', 'TEL.OL', 'TGS.OL', 'THIN.OL', 'TOM.OL',
                    'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
     stock_folder = '/Stockmarked/'
@@ -80,41 +80,39 @@ class Stock:
         data = self.pull_stocks(stock)
         self.save_stocks_to_file(data, stock)
 
+    def get_rsi_mean(self, existingData, i):
+        n_days = 5
+        rsi = indicators.rsi_func(existingData.iloc[1:i, 1])
+        rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
+        rsi_mean_change = rsi[-1] - rsi[-2]
+        return '{:.6f}'.format(rsi_mean_change)
+
+    def get_macd_norm(self, existingData, i):
+        _, _, macd = indicators.macd_calc(existingData.iloc[1:i, 1])
+        return macd[-1] / min(macd) if macd[-1] >= 0 else macd[-1] / min(macd)
+
     def browse_stocks(self, stocks):
-        n_days, nema = 5, 9
         for stock in tqdm(stocks):
             try:
                 file_name = os.getcwd() + self.stock_folder + stock + '.csv'
                 existingData = pd.read_csv(file_name)
                 for i in range(len(existingData.iloc[:, 1])):
                     try:
-                        rsi = indicators.rsi_func(existingData.iloc[1:i, 1])
-
-                        _, _, macd = indicators.macd_calc(
-                            existingData.iloc[1:i, 1])
-                        min_macd = min(macd)
-                        max_macd = max(macd)
-                        if macd[-1] >= 0:
-                            macd_norm = macd[-1] / min_macd
-                        elif macd[-1] < 0:
-                            macd_norm = (macd[-1] / min_macd)
-                        ema9 = indicators.exp_moving_average(macd, nema)
-                        rsi_mean_change = np.sum(
-                            np.diff(rsi[-n_days:-1]))/n_days
-                        rsi_mean_change = rsi[-1] - rsi[-2]
-                        rsi_mean_change = '{:.6f}'.format(rsi_mean_change)
+                        macd_norm = self.get_macd_norm(existingData, i)
+                        rsi_mean_change = self.get_rsi_mean(existingData, i)
                     except Exception as e:
                         pass
                 price = existingData.iloc[-1, 1]
-                temp_pd = pd.DataFrame([[stock, price, rsi[-1], macd[-1], abs(macd[-1]-ema9[-1]), macd_norm, rsi_mean_change]],
-                                       columns=['Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
+                temp_pd = pd.DataFrame([[stock, price, macd_norm, rsi_mean_change]],
+                                       columns=['Stock', 'Price', 'MACD norm', 'RSI mean change'])
                 self.stock_data = self.stock_data.append(temp_pd)
-                self.stock_data.to_csv(os.getcwd() + self.stock_folder +
-                                       'stock_data_test' + '.csv')
 
             except Exception as e:
                 self.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
+
+        self.stock_data.to_csv(os.getcwd() + self.stock_folder +
+                               'stock_data_test' + '.csv')
 
 
 class Plotter():
@@ -174,8 +172,8 @@ class Plotter():
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
         mov_avg_20, mov_avg_60, mov_avg_100 = self.get_mov_avg(close_price)
-        candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
-                         colorup='#53C156', colordown='#ff1717')
+        mpl_finance.candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
+                                     colorup='#53C156', colordown='#ff1717')
         ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
                            '#e1edf9', label='20 SMA', linewidth=1)
         ax_can_sticks.plot(dates[-len(mov_avg_60):], mov_avg_60,
@@ -278,11 +276,11 @@ class Plotter():
                 file_name = os.getcwd() + self.stock.stock_folder + stock + '.csv'
                 stock_data_raw = pd.read_csv(file_name)
                 stock_data_adj, dates = self.adjust_df_dates(stock_data_raw)
+                self.graph_candlestick_volume_show(
+                    stock, dates, stock_data_adj)
             except Exception as e:
                 self.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
-
-            self.graph_candlestick_volume_show(stock, dates, stock_data_adj)
 
     def plot_macd_change(self, num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
