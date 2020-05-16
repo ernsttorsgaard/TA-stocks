@@ -143,17 +143,23 @@ class Plotter():
             ax_rsi.axhline(30, color='#386d13', linewidth=0.5)
             ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
 
+    def adjust_df_dates(self, stock_data_raw):
+        dates_string = stock_data_raw.loc[:, "Date"]
+        dates = [datetime.strptime(d, '%Y-%m-%d')
+                 for d in stock_data_raw.loc[:, "Date"]]
+        stock_data_raw['Date'] = m_dates.date2num(dates)
+        return stock_data_raw, dates
+
     def graph_rsi(self, stock, dates, close_price):
         ax_rsi = plt.subplot2grid(
             shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
-        SP = len(dates)
         rsi = indicators.rsi_func(close_price)
 
-        ax_rsi.plot(dates[-SP:], rsi[-SP:], '#c1f9f7', linewidth=1)
-        ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 70, where=(rsi[-SP:]
-                                                               >= 70), interpolate=True,  facecolor='#8f2020', edgecolor='#8f2020')
-        ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 30, where=(rsi[-SP:]
-                                                               <= 30), interpolate=True, facecolor='#386d13', edgecolor='#386d13')
+        ax_rsi.plot(dates, rsi, '#c1f9f7', linewidth=1)
+        ax_rsi.fill_between(dates, rsi, 70, where=(rsi
+                                                   >= 70), interpolate=True,  facecolor='#8f2020', edgecolor='#8f2020')
+        ax_rsi.fill_between(dates, rsi, 30, where=(rsi
+                                                   <= 30), interpolate=True, facecolor='#386d13', edgecolor='#386d13')
         ax_rsi.set_yticks([30, 50, 70])
         ax_rsi.text(0.015, 0.95, 'RSI (14)', va='top',
                     color='w', transform=ax_rsi.transAxes)
@@ -168,8 +174,6 @@ class Plotter():
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
         mov_avg_20, mov_avg_60, mov_avg_100 = self.get_mov_avg(close_price)
-        plt.ylim(min(close_price[-300:-1])*0.8, max(close_price[-300:-1])*1.1)
-        ax_can_sticks.yaxis.label.set_color('w')
         candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
                          colorup='#53C156', colordown='#ff1717')
         ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
@@ -185,6 +189,7 @@ class Plotter():
         plt.setp(ax_can_sticks .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
         plt.ylabel('Price and Volume')
+        plt.ylim(min(close_price[-300:-1])*0.8, max(close_price[-300:-1])*1.1)
         plt.grid()
         plt.legend(loc=9, ncol=2, borderaxespad=0,
                    fancybox=True, prop={'size': 7}, framealpha=0.4)
@@ -205,10 +210,10 @@ class Plotter():
             5, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         nema = 9
 
-        emaslow, emafast, macd = indicators.macd_calc(close_price)
+        emaslow, _, macd = indicators.macd_calc(close_price)
         ema9 = indicators.exp_moving_average(macd, nema)
-        ppo = (emafast - emaslow)/emaslow*100
-        ppo_ema9 = (ema9)/emaslow*100
+        ppo = macd/emaslow*100
+        ppo_ema9 = ema9/emaslow*100
 
         ax_ppo.plot(dates, ppo, color='#4ee6fd', linewidth=2)
         ax_ppo.plot(dates, ppo_ema9, color='#e1edf9', linewidth=1)
@@ -227,29 +232,24 @@ class Plotter():
 
         obv = indicators.on_balance_volume(existingData)
 
-        ax_obv.plot(dates[-len(obv):], obv['obv'],
+        ax_obv.plot(dates, obv['obv'],
                     color='#4ee6fd', linewidth=1.5)
-        ax_obv.plot(dates[-len(obv):], obv['obv_ema21'],
+        ax_obv.plot(dates, obv['obv_ema21'],
                     color='white', linewidth=1)
         ax_obv.text(0.015, 0.95, 'OBV (21)', va='top',
                     color='w', transform=ax_obv.transAxes)
 
-        ylim_low = min(obv['obv'].iloc[-300:-1])
-        ylim_high = max(obv['obv'].iloc[-300:-1])
-        plt.ylim(ylim_low, ylim_high)
+        plt.ylim(min(obv['obv'].iloc[-300:-1]), max(obv['obv'].iloc[-300:-1]))
 
         ax_obv.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
         self.set_ax_properties(ax_obv)
 
-    def graph_candlestick_volume_show(self, stock, existingData):
-        dates_string = existingData.loc[:, "Date"]
-        dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
-        existingData['Date'] = m_dates.date2num(dates)
-        close_price = existingData.loc[:, "Close"]
-        volume = existingData.loc[:, "Volume"]
-        quotes = [tuple(x) for x in existingData[[
+    def graph_candlestick_volume_show(self, stock, dates, stock_data):
+        close_price = stock_data.loc[:, "Close"]
+        volume = stock_data.loc[:, "Volume"]
+        quotes = [tuple(x) for x in stock_data[[
             'Date', 'Open', 'High', 'Low', 'Close']].values]
 
         # Expands plottet window, weird
@@ -260,7 +260,7 @@ class Plotter():
             stock, quotes, dates, close_price, ax_rsi)
         self.graph_volume(volume, dates, ax_can_sticks)
         self.graph_ppo(dates, ax_can_sticks, close_price)
-        self.graph_obv(dates, ax_can_sticks, existingData)
+        self.graph_obv(dates, ax_can_sticks, stock_data)
 
         plt.subplots_adjust(hspace=0.0, bottom=0.1,
                             top=0.94, right=0.96, left=0.06)
@@ -276,20 +276,16 @@ class Plotter():
             try:
                 print('Stock {}'.format(stock))
                 file_name = os.getcwd() + self.stock.stock_folder + stock + '.csv'
-                existingData = pd.read_csv(file_name)
+                stock_data_raw = pd.read_csv(file_name)
+                stock_data_adj, dates = self.adjust_df_dates(stock_data_raw)
             except Exception as e:
                 self.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
-            self.graph_candlestick_volume_show(stock, existingData)
-
-        stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
-            'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
+            self.graph_candlestick_volume_show(stock, dates, stock_data_adj)
 
     def plot_macd_change(self, num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
-        [os.remove(file) for file in os.listdir(
-            os.getcwd() + self.stock.stock_folder) if file.endswith('_macd_change.png')]
         try:
             file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
@@ -306,8 +302,6 @@ class Plotter():
 
     def plot_RSI_change(self, num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
-        [os.remove(file) for file in os.listdir(
-            os.getcwd() + self.stock.stock_folder) if file.endswith('_macd_change.png')]
         try:
             file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
