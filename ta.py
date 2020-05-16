@@ -47,7 +47,7 @@ class Stock:
                    'TOTG.OL', 'TRE.OL', 'VEI.OL', 'VISTIN.OL', 'WALWIL.OL', 'WWI.OL', 'XXL.OL', 'YAR.OL', 'ZAL.OL'])
 
     stock_folder = '/Stockmarked/'
-    start_limit = str(date.today() - timedelta(days=365))
+    start_limit = str(date.today() - timedelta(days=550))
     stock_counter = 0
     stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
         'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
@@ -84,16 +84,16 @@ class Stock:
         Stock.save_stocks_to_file(data, stock)
 
     @staticmethod
-    def get_rsi_mean(existingData, i):
+    def get_rsi_mean(stock_data_raw, i):
         n_days = 5
-        rsi = indicators.rsi_func(existingData.iloc[1:i, 1])
+        rsi = indicators.rsi_func(stock_data_raw.iloc[1:i, 1])
         rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
         rsi_mean_change = rsi[-1] - rsi[-2]
         return '{:.6f}'.format(rsi_mean_change)
 
     @staticmethod
-    def get_macd_norm(existingData, i):
-        _, _, macd = indicators.macd_calc(existingData.iloc[1:i, 1])
+    def get_macd_norm(stock_data_raw, i):
+        _, _, macd = indicators.macd_calc(stock_data_raw.iloc[1:i, 1])
         return macd[-1] / min(macd) if macd[-1] >= 0 else macd[-1] / min(macd)
 
     @staticmethod
@@ -101,14 +101,14 @@ class Stock:
         for stock in tqdm(stocks):
             try:
                 file_name = os.getcwd() + Stock.stock_folder + stock + '.csv'
-                existingData = pd.read_csv(file_name)
-                for i in range(len(existingData.iloc[:, 1])):
+                stock_data_raw = pd.read_csv(file_name)
+                for i in range(len(stock_data_raw.iloc[:, 1])):
                     try:
-                        macd_norm = Stock.get_macd_norm(existingData, i)
-                        rsi_mean_change = Stock.get_rsi_mean(existingData, i)
+                        macd_norm = Stock.get_macd_norm(stock_data_raw, i)
+                        rsi_mean_change = Stock.get_rsi_mean(stock_data_raw, i)
                     except Exception as e:
                         pass
-                price = existingData.iloc[-1, 1]
+                price = stock_data_raw.iloc[-1, 1]
                 temp_pd = pd.DataFrame([[stock, price, macd_norm, rsi_mean_change]],
                                        columns=['Stock', 'Price', 'MACD norm', 'RSI mean change'])
                 Stock.stock_data = Stock.stock_data.append(temp_pd)
@@ -126,8 +126,7 @@ class Plotter():
         str(date.today() - timedelta(days=365)), '%Y-%m-%d'))
     end_lim = m_dates.date2num(datetime.strptime(
         str(datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d'))
-    stocker = Stock()
-    logger = Logger()
+    stock = Stock()
 
     @staticmethod
     def get_mov_avg(close_price):
@@ -181,6 +180,10 @@ class Plotter():
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
         mov_avg_20, mov_avg_60, mov_avg_100 = Plotter.get_mov_avg(close_price)
+        print(len(mov_avg_100))
+        print(len(mov_avg_60))
+        print(len(mov_avg_20))
+        print(len(dates))
         mpl_finance.candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
                                      colorup='#53C156', colordown='#ff1717')
         ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
@@ -191,7 +194,7 @@ class Plotter():
             ax_can_sticks.plot(dates[-len(mov_avg_100):], mov_avg_100,
                                'red', label='100 SMA', linewidth=1)
         except Exception as e:
-            Plotter.logger.log_error(
+            stock.logger.log_error(
                 'Not enough stock data to plot 100MA for stock {}'.format(stock))
         plt.setp(ax_can_sticks .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
@@ -293,17 +296,17 @@ class Plotter():
                 Plotter.graph_candlestick_volume_show(
                     stock, dates, stock_data_adj)
             except Exception as e:
-                Plotter.logger.log_error(
+                stock.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
     @staticmethod
-    def plot_macd_change(Plotter, num_stocks):
+    def plot_macd_change(num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
         try:
             file_name = os.getcwd() + Plotter.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            Plotter.logger.log_error(
+            stock.logger.log_error(
                 'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
@@ -320,7 +323,7 @@ class Plotter():
             file_name = os.getcwd() + Plotter.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            Plotter.logger.log_error(
+            stock.logger.log_error(
                 'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
@@ -335,7 +338,6 @@ class Plotter():
 class UserInput():
     num_stock_to_show = 25
     plotter = Plotter()
-    stock = Stock()
 
     @staticmethod
     def user_input():
@@ -353,11 +355,12 @@ class UserInput():
         elif int(alternative) == 3:
             start_time = time.process_time()
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                executor.map(UserInput.stock.pull_and_save_stocks,
-                             UserInput.stock.obx_stocks)
+                executor.map(UserInput.plotter.stock.pull_and_save_stocks,
+                             UserInput.plotter.stock.obx_stocks)
             intermediate_time = round(time.process_time() - start_time, 1)
             intermedate_start_time = time.process_time()
-            UserInput.stock.browse_stocks(UserInput.stock.obx_stocks)
+            UserInput.plotter.stock.browse_stocks(
+                UserInput.plotter.stock.obx_stocks)
             int_time = round(time.process_time() - intermedate_start_time, 1)
             execution_time = round(time.process_time() - start_time, 1)
             print(f"Pulling and saving took {intermediate_time} seconds")
