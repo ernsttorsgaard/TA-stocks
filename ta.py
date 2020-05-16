@@ -138,98 +138,104 @@ class Plotter():
         quotes = [tuple(x) for x in existingData[[
             'Date', 'Open', 'High', 'Low', 'Close']].values]
 
+        # Expands plottet window, weird
+        _, _ = plt.subplots(facecolor='#07000d')
+
+        # RSI
+        SP = len(dates[100 - 1:])
+        rsi = indicators.rsi_func(closep)
+        ax_rsi = plt.subplot2grid(
+            shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
+
+        ax_rsi.plot(dates[-SP:], rsi[-SP:], '#c1f9f7', linewidth=1)
+        ax_rsi.axhline(70, color='#8f2020', linewidth=0.5)
+        ax_rsi.axhline(30, color='#386d13', linewidth=0.5)
+        ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
+        ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 70, where=(rsi[-SP:]
+                                                               >= 70), facecolor='#8f2020', edgecolor='#8f2020')
+        ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 30, where=(rsi[-SP:]
+                                                               <= 30), facecolor='#386d13', edgecolor='#386d13')
+        ax_rsi.set_yticks([30, 50, 70])
+        ax_rsi.set_facecolor('#07000d')
+        ax_rsi.yaxis.label.set_color('w')
+        ax_rsi.spines['bottom'].set_color('#5998ff')
+        ax_rsi.spines['top'].set_color('#5998ff')
+        ax_rsi.spines['left'].set_color('#5998ff')
+        ax_rsi.spines['right'].set_color('#5998ff')
+        ax_rsi.text(0.015, 0.95, 'RSI (14)', va='top',
+                    color='w', transform=ax_rsi.transAxes)
+        ax_rsi.tick_params(axis='y', colors='w')
+        ax_rsi.tick_params(axis='x', colors='w')
+        plt.setp(ax_rsi.get_xticklabels(), visible=False, size=8)
+        plt.title('{} Stock'.format(stock), color='w')
+        plt.ylabel('RSI')
+
+        # MACD
+
         mov_avg_20 = indicators.moving_average(closep, window=20)
         mov_avg_60 = indicators.moving_average(closep, window=60)
         mov_avg_100 = indicators.moving_average(closep, window=100)
 
-        SP = len(dates[100 - 1:])
-
-        rsiCol = '#c1f9f7'
-        posCol = '#386d13'
-        negCol = '#8f2020'
-
-        fig, ax = plt.subplots(facecolor='#07000d')
-
-        ax0 = plt.subplot2grid((7, 4), (0, 0), rowspan=1, colspan=4)
-
-        rsi = indicators.rsi_func(closep)
-        ax0.plot(dates[-SP:], rsi[-SP:], rsiCol, linewidth=1)
-        ax0.axhline(70, color=negCol, linewidth=0.5)
-        ax0.axhline(30, color=posCol, linewidth=0.5)
-        ax0.axhline(50, color='white', linewidth=0.5, linestyle=':')
-        ax0.fill_between(dates[-SP:], rsi[-SP:], 70, where=(rsi[-SP:]
-                                                            >= 70), facecolor=negCol, edgecolor=negCol)
-        ax0.fill_between(dates[-SP:], rsi[-SP:], 30, where=(rsi[-SP:]
-                                                            <= 30), facecolor=posCol, edgecolor=posCol)
-        ax0.set_yticks([30, 50, 70])
-        ax0.set_facecolor('#07000d')
-        ax0.yaxis.label.set_color('w')
-        ax0.spines['bottom'].set_color('#5998ff')
-        ax0.spines['top'].set_color('#5998ff')
-        ax0.spines['left'].set_color('#5998ff')
-        ax0.spines['right'].set_color('#5998ff')
-        ax0.text(0.015, 0.95, 'RSI (14)', va='top',
-                 color='w', transform=ax0.transAxes)
-        ax0.tick_params(axis='y', colors='w')
-        ax0.tick_params(axis='x', colors='w')
-        plt.setp(ax0.get_xticklabels(), visible=False, size=8)
-        plt.title('{} Stock'.format(stock), color='w')
-        plt.ylabel('RSI')
         start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
         start_lim = m_dates.date2num(start_lim)
         end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
         end_lim = m_dates.date2num(end_lim)
-        ax = plt.subplot2grid((7, 4), (1, 0), rowspan=4, sharex=ax0, colspan=4)
-        ax.set_facecolor('#07000d')
-        plt.xlim(left=start_lim, right=end_lim)
+        ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
+            1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
+        ax_can_sticks.set_facecolor('#07000d')
         ylim_low = min(closep[-300:-1])*0.8
         ylim_high = max(closep[-300:-1])*1.1
         plt.ylim(ylim_low, ylim_high)
-        ax.yaxis.label.set_color('w')
-        ax.spines['bottom'].set_color('#5998ff')
-        ax.spines['top'].set_color('#5998ff')
-        ax.spines['left'].set_color('#5998ff')
-        ax.spines['right'].set_color('#5998ff')
-        ax.tick_params(axis='y', colors='w')
-        ax.tick_params(axis='x', colors='w')
-        candlestick_ohlc(ax, quotes, width=0.75,
+        ax_can_sticks.yaxis.label.set_color('w')
+        ax_can_sticks.spines['bottom'].set_color('#5998ff')
+        ax_can_sticks.spines['top'].set_color('#5998ff')
+        ax_can_sticks.spines['left'].set_color('#5998ff')
+        ax_can_sticks.spines['right'].set_color('#5998ff')
+        ax_can_sticks.tick_params(axis='y', colors='w')
+        ax_can_sticks.tick_params(axis='x', colors='w')
+        candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
                          colorup='#53C156', colordown='#ff1717')
-        ax.plot(dates[-len(mov_avg_20):], mov_avg_20,
-                '#e1edf9', label='20 SMA', linewidth=1)
-        ax.plot(dates[-len(mov_avg_60):], mov_avg_60,
-                '#4ee6fd', label='60 SMA', linewidth=1)
+        ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
+                           '#e1edf9', label='20 SMA', linewidth=1)
+        ax_can_sticks.plot(dates[-len(mov_avg_60):], mov_avg_60,
+                           '#4ee6fd', label='60 SMA', linewidth=1)
         try:
-            ax.plot(dates[-len(mov_avg_100):], mov_avg_100,
-                    'red', label='100 SMA', linewidth=1)
+            ax_can_sticks.plot(dates[-len(mov_avg_100):], mov_avg_100,
+                               'red', label='100 SMA', linewidth=1)
         except Exception as e:
             self.logger.log_error(
                 'Not enough stock data to plot 100MA for stock {}'.format(stock))
-        plt.setp(ax .get_xticklabels(), visible=False, size=8)
+        plt.setp(ax_can_sticks .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
         plt.xlabel('Date')
         plt.ylabel('Price and Volume')
         plt.grid()
-        ax.xaxis_date()
-        ax.xaxis.set_major_formatter(m_dates.DateFormatter("%Y-%m-%d"))
+        ax_can_sticks.xaxis_date()
+        ax_can_sticks.xaxis.set_major_formatter(
+            m_dates.DateFormatter("%Y-%m-%d"))
 
         maLeg = plt.legend(loc=9, ncol=2, borderaxespad=0,
                            fancybox=True, prop={'size': 7})
         maLeg.get_frame().set_alpha(0.4)
 
+        # Volume
         volumeMin = 0
-        ax1v = ax.twinx()
-        ax1v.fill_between(dates, volumeMin, volume,
-                          facecolor='#00ffe8', alpha=0.5)
-        ax1v.axes.yaxis.set_ticklabels([])
-        ax1v.set_ylim(0, 2*volume.max())
-        ax1v.spines['bottom'].set_color('#5998ff')
-        ax1v.spines['top'].set_color('#5998ff')
-        ax1v.spines['left'].set_color('#5998ff')
-        ax1v.spines['right'].set_color('#5998ff')
-        ax1v.tick_params(axis='x', colors='w')
-        ax1v.tick_params(axis='y', colors='w')
+        ax_vol = ax_can_sticks.twinx()
+        ax_vol.fill_between(dates, volumeMin, volume,
+                            facecolor='#00ffe8', alpha=0.5)
+        ax_vol.axes.yaxis.set_ticklabels([])
+        ax_vol.set_ylim(0, 2*volume.max())
+        ax_vol.spines['bottom'].set_color('#5998ff')
+        ax_vol.spines['top'].set_color('#5998ff')
+        ax_vol.spines['left'].set_color('#5998ff')
+        ax_vol.spines['right'].set_color('#5998ff')
+        ax_vol.tick_params(axis='x', colors='w')
+        ax_vol.tick_params(axis='y', colors='w')
 
-        ax2 = plt.subplot2grid((7, 4), (5, 0), sharex=ax, rowspan=1, colspan=4)
+        # PPO
+
+        ax_ppo = plt.subplot2grid(shape=(7, 1), loc=(
+            5, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         fill_col = '#00ffe8'
         nema = 9
 
@@ -238,46 +244,49 @@ class Plotter():
         ppo = (emafast - emaslow)/emaslow*100
         ppo_ema9 = (ema9)/emaslow*100
 
-        ax2.plot(dates, ppo, color='#4ee6fd', linewidth=2)
-        ax2.plot(dates, ppo_ema9, color='#e1edf9', linewidth=1)
-        ax2.text(0.015, 0.95, 'PPO (12,26,9)', va='top',
-                 color='w', transform=ax2.transAxes)
-        ax2.fill_between(dates, ppo-ppo_ema9, 0, alpha=0.5,
-                         facecolor=fill_col, edgecolor=fill_col)
+        ax_ppo.plot(dates, ppo, color='#4ee6fd', linewidth=2)
+        ax_ppo.plot(dates, ppo_ema9, color='#e1edf9', linewidth=1)
+        ax_ppo.text(0.015, 0.95, 'PPO (12,26,9)', va='top',
+                    color='w', transform=ax_ppo.transAxes)
+        ax_ppo.fill_between(dates, ppo-ppo_ema9, 0, alpha=0.5,
+                            facecolor=fill_col, edgecolor=fill_col)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
-        ax2.set_facecolor('#07000d')
-        plt.xlim(left=start_lim, right=end_lim)
-        ax2.spines['bottom'].set_color('#5998ff')
-        ax2.spines['top'].set_color('#5998ff')
-        ax2.spines['left'].set_color('#5998ff')
-        ax2.spines['right'].set_color('#5998ff')
-        ax2.tick_params(axis='x', colors='w')
-        ax2.tick_params(axis='y', colors='w')
-        ax2.yaxis.set_major_locator(
+        ax_ppo.set_facecolor('#07000d')
+        ax_ppo.spines['bottom'].set_color('#5998ff')
+        ax_ppo.spines['top'].set_color('#5998ff')
+        ax_ppo.spines['left'].set_color('#5998ff')
+        ax_ppo.spines['right'].set_color('#5998ff')
+        ax_ppo.tick_params(axis='x', colors='w')
+        ax_ppo.tick_params(axis='y', colors='w')
+        ax_ppo.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
-        ax3 = plt.subplot2grid((7, 4), (6, 0), sharex=ax, rowspan=1, colspan=4)
+        # OBV
+
+        ax_obv = plt.subplot2grid(shape=(7, 1), loc=(
+            6, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         fill_col = '#00ffe8'
         obv = indicators.on_balance_volume(existingData)
 
-        ax3.plot(dates[-len(obv):], obv['obv'], color='#4ee6fd', linewidth=1.5)
-        ax3.plot(dates[-len(obv):], obv['obv_ema21'],
-                 color='white', linewidth=1)
-        ax3.text(0.015, 0.95, 'OBV (21)', va='top',
-                 color='w', transform=ax3.transAxes)
+        ax_obv.plot(dates[-len(obv):], obv['obv'],
+                    color='#4ee6fd', linewidth=1.5)
+        ax_obv.plot(dates[-len(obv):], obv['obv_ema21'],
+                    color='white', linewidth=1)
+        ax_obv.text(0.015, 0.95, 'OBV (21)', va='top',
+                    color='w', transform=ax_obv.transAxes)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
-        ax3.set_facecolor('#07000d')
+        ax_obv.set_facecolor('#07000d')
         plt.xlim(left=start_lim, right=end_lim)
         ylim_low = min(obv['obv'].iloc[-300:-1])
         ylim_high = max(obv['obv'].iloc[-300:-1])
         plt.ylim(ylim_low, ylim_high)
-        ax3.spines['bottom'].set_color('#5998ff')
-        ax3.spines['top'].set_color('#5998ff')
-        ax3.spines['left'].set_color('#5998ff')
-        ax3.spines['right'].set_color('#5998ff')
-        ax3.tick_params(axis='x', colors='w')
-        ax3.tick_params(axis='y', colors='w')
-        ax3.yaxis.set_major_locator(
+        ax_obv.spines['bottom'].set_color('#5998ff')
+        ax_obv.spines['top'].set_color('#5998ff')
+        ax_obv.spines['left'].set_color('#5998ff')
+        ax_obv.spines['right'].set_color('#5998ff')
+        ax_obv.tick_params(axis='x', colors='w')
+        ax_obv.tick_params(axis='y', colors='w')
+        ax_obv.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
         plt.subplots_adjust(hspace=0.0, bottom=0.1,
@@ -285,7 +294,6 @@ class Plotter():
 
         mng = plt.get_current_fig_manager()
         mng.window.state('zoomed')
-
         plt.show()
 
     def graph_data_show(self, stocks):
