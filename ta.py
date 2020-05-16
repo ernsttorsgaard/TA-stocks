@@ -122,22 +122,8 @@ class Plotter():
         self.stock = Stock()
         self.logger = Logger()
 
-    def graph_candlestick_volume_show(self, stock, existingData):
-        start_lim = str(date.today() - timedelta(days=365))
-        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
-        dates_string = existingData.iloc[:, 0]
-        dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
-        existingData['Date'] = m_dates.date2num(dates)
-
-        close_price = existingData.loc[:, "Close"]
-        quotes = [tuple(x) for x in existingData[[
-            'Date', 'Open', 'High', 'Low', 'Close']].values]
-
-        # Expands plottet window, weird
-        _, _ = plt.subplots(facecolor='#07000d')
-
-        # RSI
-        SP = len(dates[100 - 1:])
+    def graph_rsi(self, stock, dates, close_price):
+        SP = len(dates)
         rsi = indicators.rsi_func(close_price)
         ax_rsi = plt.subplot2grid(
             shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
@@ -164,12 +150,14 @@ class Plotter():
         plt.setp(ax_rsi.get_xticklabels(), visible=False, size=8)
         plt.title('{} Stock'.format(stock), color='w')
         plt.ylabel('RSI')
+        return ax_rsi
 
-        # Candlesticks
-
+    def graph_candlesticks(self, stock, quotes, dates, close_price, ax_rsi):
         mov_avg_20 = indicators.moving_average(close_price, window=20)
         mov_avg_60 = indicators.moving_average(close_price, window=60)
         mov_avg_100 = indicators.moving_average(close_price, window=100)
+        start_lim = str(date.today() - timedelta(days=365))
+        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
 
         start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
         start_lim = m_dates.date2num(start_lim)
@@ -212,9 +200,9 @@ class Plotter():
         maLeg = plt.legend(loc=9, ncol=2, borderaxespad=0,
                            fancybox=True, prop={'size': 7})
         maLeg.get_frame().set_alpha(0.4)
+        return ax_can_sticks
 
-        # Volume
-        volume = existingData.loc[:, "Volume"]
+    def graph_volume(self, volume, dates, ax_can_sticks):
         ax_vol = ax_can_sticks.twinx()
         ax_vol.fill_between(dates, 0, volume,
                             facecolor='#00ffe8', alpha=0.5)
@@ -227,8 +215,7 @@ class Plotter():
         ax_vol.tick_params(axis='x', colors='w')
         ax_vol.tick_params(axis='y', colors='w')
 
-        # PPO
-
+    def graph_ppo(self, dates, ax_can_sticks, close_price):
         ax_ppo = plt.subplot2grid(shape=(7, 1), loc=(
             5, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         nema = 9
@@ -255,8 +242,14 @@ class Plotter():
         ax_ppo.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
-        # OBV
+    def graph_obv(self, dates, ax_can_sticks, existingData):
+        start_lim = str(date.today() - timedelta(days=365))
+        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
 
+        start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
+        start_lim = m_dates.date2num(start_lim)
+        end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
+        end_lim = m_dates.date2num(end_lim)
         ax_obv = plt.subplot2grid(shape=(7, 1), loc=(
             6, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         obv = indicators.on_balance_volume(existingData)
@@ -281,6 +274,37 @@ class Plotter():
         ax_obv.tick_params(axis='y', colors='w')
         ax_obv.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
+
+    def graph_candlestick_volume_show(self, stock, existingData):
+        start_lim = str(date.today() - timedelta(days=365))
+        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
+        start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
+        start_lim = m_dates.date2num(start_lim)
+        end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
+        end_lim = m_dates.date2num(end_lim)
+
+        dates_string = existingData.iloc[:, 0]
+        dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
+        existingData['Date'] = m_dates.date2num(dates)
+
+        close_price = existingData.loc[:, "Close"]
+        quotes = [tuple(x) for x in existingData[[
+            'Date', 'Open', 'High', 'Low', 'Close']].values]
+
+        # Expands plottet window, weird
+        _, _ = plt.subplots(facecolor='#07000d')
+        # RSI
+        ax_rsi = self.graph_rsi(stock, dates, close_price)
+        # Candlesticks
+        ax_can_sticks = self.graph_candlesticks(
+            stock, quotes, dates, close_price, ax_rsi)
+        # Volume
+        volume = existingData.loc[:, "Volume"]
+        self.graph_volume(volume, dates, ax_can_sticks)
+        # PPO
+        self.graph_ppo(dates, ax_can_sticks, close_price)
+        # OBV
+        self.graph_obv(dates, ax_can_sticks, existingData)
 
         plt.subplots_adjust(hspace=0.0, bottom=0.1,
                             top=0.94, right=0.96, left=0.06)
