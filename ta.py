@@ -56,63 +56,69 @@ class Stock:
     if not os.path.exists(os.getcwd() + stock_folder):
         os.makedirs(os.getcwd() + stock_folder)
 
-    def pull_stocks(self, stock):
+    @staticmethod
+    def pull_stocks(stock):
         try:
             data = web.DataReader(
-                name=stock, data_source='yahoo', start=self.start_limit)
+                name=stock, data_source='yahoo', start=Stock.start_limit)
             data.sort_index(inplace=True)
 
         except Exception as e:
-            self.logger.log_error(
+            Stock.logger.log_error(
                 'Could not pull stock {}. Error {} \n'.format(stock, e))
             data = pd.DataFrame([0], columns=['empty'])
         return data
 
-    def save_stocks_to_file(self, data, stock):
-        file_name = os.getcwd() + self.stock_folder + stock + '.csv'
+    @staticmethod
+    def save_stocks_to_file(data, stock):
+        file_name = os.getcwd() + Stock.stock_folder + stock + '.csv'
         data.to_csv(file_name)
 
-    def pull_and_save_stocks(self, stock):
-        self.stock_counter += 1
-        print(str(self.stock_counter) + "/" +
-              str(len(self.obx_stocks)), end=" ")
+    @staticmethod
+    def pull_and_save_stocks(stock):
+        Stock.stock_counter += 1
+        print(str(Stock.stock_counter) + "/" +
+              str(len(Stock.obx_stocks)), end=" ")
         print(f'Pulling and saving stock {stock}')
-        data = self.pull_stocks(stock)
-        self.save_stocks_to_file(data, stock)
+        data = Stock.pull_stocks(stock)
+        Stock.save_stocks_to_file(data, stock)
 
-    def get_rsi_mean(self, existingData, i):
+    @staticmethod
+    def get_rsi_mean(existingData, i):
         n_days = 5
         rsi = indicators.rsi_func(existingData.iloc[1:i, 1])
         rsi_mean_change = np.sum(np.diff(rsi[-n_days:-1]))/n_days
         rsi_mean_change = rsi[-1] - rsi[-2]
         return '{:.6f}'.format(rsi_mean_change)
 
-    def get_macd_norm(self, existingData, i):
+    @staticmethod
+    def get_macd_norm(existingData, i):
         _, _, macd = indicators.macd_calc(existingData.iloc[1:i, 1])
         return macd[-1] / min(macd) if macd[-1] >= 0 else macd[-1] / min(macd)
 
-    def browse_stocks(self, stocks):
+    @staticmethod
+    def browse_stocks(stocks):
         for stock in tqdm(stocks):
             try:
-                file_name = os.getcwd() + self.stock_folder + stock + '.csv'
+                file_name = os.getcwd() + Stock.stock_folder + stock + '.csv'
                 existingData = pd.read_csv(file_name)
                 for i in range(len(existingData.iloc[:, 1])):
                     try:
-                        macd_norm = self.get_macd_norm(existingData, i)
-                        rsi_mean_change = self.get_rsi_mean(existingData, i)
+                        macd_norm = Stock.get_macd_norm(existingData, i)
+                        rsi_mean_change = Stock.get_rsi_mean(existingData, i)
                     except Exception as e:
                         pass
                 price = existingData.iloc[-1, 1]
                 temp_pd = pd.DataFrame([[stock, price, macd_norm, rsi_mean_change]],
                                        columns=['Stock', 'Price', 'MACD norm', 'RSI mean change'])
-                self.stock_data = self.stock_data.append(temp_pd)
+                Stock.stock_data = Stock.stock_data.append(temp_pd)
 
             except Exception as e:
-                self.logger.log_error(
+                Stock.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
-        self.stock_data.to_csv(os.getcwd() + self.stock_folder +
-                               'stock_data_test' + '.csv')
+        Stock.stock_data.to_csv(os.getcwd() + Stock.stock_folder +
+                                'stock_data_test' + '.csv')
 
 
 class Plotter():
@@ -120,18 +126,18 @@ class Plotter():
         str(date.today() - timedelta(days=365)), '%Y-%m-%d'))
     end_lim = m_dates.date2num(datetime.strptime(
         str(datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d'))
+    stocker = Stock()
+    logger = Logger()
 
-    def __init__(self):
-        self.stock = Stock()
-        self.logger = Logger()
-
-    def get_mov_avg(self, close_price):
+    @staticmethod
+    def get_mov_avg(close_price):
         mov_avg_20 = indicators.moving_average(close_price, window=20)
         mov_avg_60 = indicators.moving_average(close_price, window=60)
         mov_avg_100 = indicators.moving_average(close_price, window=100)
         return mov_avg_20, mov_avg_60, mov_avg_100
 
-    def set_ax_properties(self, ax, ax_rsi=None):
+    @staticmethod
+    def set_ax_properties(ax, ax_rsi=None):
         ax.tick_params(axis='both', colors='w')
         for loc in ('bottom', 'top', 'left', 'right'):
             ax.spines[loc].set_color('#5998ff')
@@ -141,14 +147,16 @@ class Plotter():
             ax_rsi.axhline(30, color='#386d13', linewidth=0.5)
             ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
 
-    def adjust_df_dates(self, stock_data_raw):
+    @staticmethod
+    def adjust_df_dates(stock_data_raw):
         dates_string = stock_data_raw.loc[:, "Date"]
         dates = [datetime.strptime(d, '%Y-%m-%d')
                  for d in stock_data_raw.loc[:, "Date"]]
         stock_data_raw['Date'] = m_dates.date2num(dates)
         return stock_data_raw, dates
 
-    def graph_rsi(self, stock, dates, close_price):
+    @staticmethod
+    def graph_rsi(stock, dates, close_price):
         ax_rsi = plt.subplot2grid(
             shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
         rsi = indicators.rsi_func(close_price)
@@ -161,17 +169,18 @@ class Plotter():
         ax_rsi.set_yticks([30, 50, 70])
         ax_rsi.text(0.015, 0.95, 'RSI (14)', va='top',
                     color='w', transform=ax_rsi.transAxes)
-        self.set_ax_properties(ax=ax_rsi, ax_rsi=ax_rsi)
+        Plotter.set_ax_properties(ax=ax_rsi, ax_rsi=ax_rsi)
 
         plt.title('{} Stock'.format(stock), color='w')
         plt.ylabel('RSI')
 
         return ax_rsi
 
-    def graph_candlesticks(self, stock, quotes, dates, close_price, ax_rsi):
+    @staticmethod
+    def graph_candlesticks(stock, quotes, dates, close_price, ax_rsi):
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
-        mov_avg_20, mov_avg_60, mov_avg_100 = self.get_mov_avg(close_price)
+        mov_avg_20, mov_avg_60, mov_avg_100 = Plotter.get_mov_avg(close_price)
         mpl_finance.candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
                                      colorup='#53C156', colordown='#ff1717')
         ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
@@ -182,7 +191,7 @@ class Plotter():
             ax_can_sticks.plot(dates[-len(mov_avg_100):], mov_avg_100,
                                'red', label='100 SMA', linewidth=1)
         except Exception as e:
-            self.logger.log_error(
+            Plotter.logger.log_error(
                 'Not enough stock data to plot 100MA for stock {}'.format(stock))
         plt.setp(ax_can_sticks .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
@@ -191,19 +200,21 @@ class Plotter():
         plt.grid()
         plt.legend(loc=9, ncol=2, borderaxespad=0,
                    fancybox=True, prop={'size': 7}, framealpha=0.4)
-        self.set_ax_properties(ax_can_sticks)
+        Plotter.set_ax_properties(ax_can_sticks)
         return ax_can_sticks
 
-    def graph_volume(self, volume, dates, ax_can_sticks):
+    @staticmethod
+    def graph_volume(volume, dates, ax_can_sticks):
         ax_vol = ax_can_sticks.twinx()
         ax_vol.fill_between(dates, 0, volume,
                             facecolor='#00ffe8', alpha=0.5)
         ax_vol.axes.yaxis.set_ticklabels([])
         ax_vol.set_ylim(0, 2*volume.max())
 
-        self.set_ax_properties(ax_vol)
+        Plotter.set_ax_properties(ax_vol)
 
-    def graph_ppo(self, dates, ax_can_sticks, close_price):
+    @staticmethod
+    def graph_ppo(dates, ax_can_sticks, close_price):
         ax_ppo = plt.subplot2grid(shape=(7, 1), loc=(
             5, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         nema = 9
@@ -222,9 +233,10 @@ class Plotter():
         ax_ppo.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
-        self.set_ax_properties(ax_ppo)
+        Plotter.set_ax_properties(ax_ppo)
 
-    def graph_obv(self, dates, ax_can_sticks, existingData):
+    @staticmethod
+    def graph_obv(dates, ax_can_sticks, existingData):
         ax_obv = plt.subplot2grid(shape=(7, 1), loc=(
             6, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
 
@@ -242,9 +254,10 @@ class Plotter():
         ax_obv.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
-        self.set_ax_properties(ax_obv)
+        Plotter.set_ax_properties(ax_obv)
 
-    def graph_candlestick_volume_show(self, stock, dates, stock_data):
+    @staticmethod
+    def graph_candlestick_volume_show(stock, dates, stock_data):
         close_price = stock_data.loc[:, "Close"]
         volume = stock_data.loc[:, "Volume"]
         quotes = [tuple(x) for x in stock_data[[
@@ -253,58 +266,61 @@ class Plotter():
         # Expands plottet window, weird
         _, _ = plt.subplots(facecolor='#07000d')
 
-        ax_rsi = self.graph_rsi(stock, dates, close_price)
-        ax_can_sticks = self.graph_candlesticks(
+        ax_rsi = Plotter.graph_rsi(stock, dates, close_price)
+        ax_can_sticks = Plotter.graph_candlesticks(
             stock, quotes, dates, close_price, ax_rsi)
-        self.graph_volume(volume, dates, ax_can_sticks)
-        self.graph_ppo(dates, ax_can_sticks, close_price)
-        self.graph_obv(dates, ax_can_sticks, stock_data)
+        Plotter.graph_volume(volume, dates, ax_can_sticks)
+        Plotter.graph_ppo(dates, ax_can_sticks, close_price)
+        Plotter.graph_obv(dates, ax_can_sticks, stock_data)
 
         plt.subplots_adjust(hspace=0.0, bottom=0.1,
                             top=0.94, right=0.96, left=0.06)
-        plt.xlim(left=self.start_lim, right=self.end_lim)
+        plt.xlim(left=Plotter.start_lim, right=Plotter.end_lim)
 
         mng = plt.get_current_fig_manager()
         mng.window.state('zoomed')
         # plt.gcf().autofmt_xdate()
         plt.show()
 
-    def graph_data_show(self, stocks):
+    @staticmethod
+    def graph_data_show(stocks):
         for stock in stocks:
             try:
                 print('Stock {}'.format(stock))
-                file_name = os.getcwd() + self.stock.stock_folder + stock + '.csv'
+                file_name = os.getcwd() + Plotter.stock.stock_folder + stock + '.csv'
                 stock_data_raw = pd.read_csv(file_name)
-                stock_data_adj, dates = self.adjust_df_dates(stock_data_raw)
-                self.graph_candlestick_volume_show(
+                stock_data_adj, dates = Plotter.adjust_df_dates(stock_data_raw)
+                Plotter.graph_candlestick_volume_show(
                     stock, dates, stock_data_adj)
             except Exception as e:
-                self.logger.log_error(
+                Plotter.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
 
-    def plot_macd_change(self, num_stocks):
+    @staticmethod
+    def plot_macd_change(Plotter, num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
         try:
-            file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
+            file_name = os.getcwd() + Plotter.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            self.logger.log_error(
+            Plotter.logger.log_error(
                 'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
             by='MACD norm', ascending=False)
         print('Generating plot for following stocks sorted after MACD norm')
         print(stock_data_macd_ema9[['Stock', 'MACD norm']].iloc[0:num_stocks])
-        self.graph_data_show(
+        Plotter.graph_data_show(
             stock_data_macd_ema9['Stock'].iloc[0:num_stocks])
 
-    def plot_RSI_change(self, num_stocks):
+    @staticmethod
+    def plot_RSI_change(num_stocks):
         pd.options.display.float_format = '{:.5f}'.format
         try:
-            file_name = os.getcwd() + self.stock.stock_folder + 'stock_data_test.csv'
+            file_name = os.getcwd() + Plotter.stock.stock_folder + 'stock_data_test.csv'
             stock_data = pd.read_csv(file_name)
         except Exception as e:
-            self.logger.log_error(
+            Plotter.logger.log_error(
                 'Could not read stock file with error {}'.format(e))
 
         stock_data_macd_ema9 = stock_data.sort_values(
@@ -312,37 +328,36 @@ class Plotter():
         print('Generating plot for the following stocks sorted after RSI')
         print(stock_data_macd_ema9[[
             'Stock', 'RSI mean change']].iloc[0:num_stocks])
-        self.graph_data_show(
+        Plotter.graph_data_show(
             stock_data_macd_ema9['Stock'].iloc[0:num_stocks])
 
 
 class UserInput():
     num_stock_to_show = 25
+    plotter = Plotter()
+    stock = Stock()
 
-    def __init__(self):
-        self.plotter = Plotter()
-        self.stock = Stock()
-
-    def user_input(self):
+    @staticmethod
+    def user_input():
         alternative = input(
             "Valg 1-5: \n 1: MACD norm filter \n 2: RSI change filter \n 3: Pull new stock data \n 4: Plot stocks \n 5: Exit \n >> ")
         while int(alternative) < 1 or int(alternative) > 5:
             print("Wrong input, try again: ")
             alternative = input(">> ")
         if int(alternative) == 1:
-            self.plotter.plot_macd_change(
-                self.num_stock_to_show)
+            UserInput.plotter.plot_macd_change(
+                UserInput.num_stock_to_show)
         elif int(alternative) == 2:
-            self.plotter.plot_RSI_change(
-                self.num_stock_to_show)
+            UserInput.plotter.plot_RSI_change(
+                UserInput.num_stock_to_show)
         elif int(alternative) == 3:
             start_time = time.process_time()
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                executor.map(self.stock.pull_and_save_stocks,
-                             self.stock.obx_stocks)
+                executor.map(UserInput.stock.pull_and_save_stocks,
+                             UserInput.stock.obx_stocks)
             intermediate_time = round(time.process_time() - start_time, 1)
             intermedate_start_time = time.process_time()
-            self.stock.browse_stocks(self.stock.obx_stocks)
+            UserInput.stock.browse_stocks(UserInput.stock.obx_stocks)
             int_time = round(time.process_time() - intermedate_start_time, 1)
             execution_time = round(time.process_time() - start_time, 1)
             print(f"Pulling and saving took {intermediate_time} seconds")
@@ -354,8 +369,8 @@ class UserInput():
                           'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
             stocks_watch = []
 
-            self.plotter.graph_data_show(stocks_own)
-            self.plotter.graph_data_show(stocks_watch)
+            UserInput.plotter.graph_data_show(stocks_own)
+            UserInput.plotter.graph_data_show(stocks_watch)
         elif int(alternative) == 5:
             exit()
 
