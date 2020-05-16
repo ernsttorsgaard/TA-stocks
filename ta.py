@@ -127,25 +127,29 @@ class Plotter():
         self.stock = Stock()
         self.logger = Logger()
 
-    def set_ax_properties(self, ax):
-        ax.tick_params(axis='y', colors='w')
-        ax.tick_params(axis='x', colors='w')
-        ax.spines['bottom'].set_color('#5998ff')
-        ax.spines['top'].set_color('#5998ff')
-        ax.spines['left'].set_color('#5998ff')
-        ax.spines['right'].set_color('#5998ff')
+    def get_mov_avg(self, close_price):
+        mov_avg_20 = indicators.moving_average(close_price, window=20)
+        mov_avg_60 = indicators.moving_average(close_price, window=60)
+        mov_avg_100 = indicators.moving_average(close_price, window=100)
+        return mov_avg_20, mov_avg_60, mov_avg_100
+
+    def set_ax_properties(self, ax, ax_rsi=None):
+        ax.tick_params(axis='both', colors='w')
+        for loc in ('bottom', 'top', 'left', 'right'):
+            ax.spines[loc].set_color('#5998ff')
         ax.set_facecolor('#07000d')
+        if ax_rsi:
+            ax_rsi.axhline(70, color='#8f2020', linewidth=0.5)
+            ax_rsi.axhline(30, color='#386d13', linewidth=0.5)
+            ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
 
     def graph_rsi(self, stock, dates, close_price):
-        SP = len(dates)
-        rsi = indicators.rsi_func(close_price)
         ax_rsi = plt.subplot2grid(
             shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
+        SP = len(dates)
+        rsi = indicators.rsi_func(close_price)
 
         ax_rsi.plot(dates[-SP:], rsi[-SP:], '#c1f9f7', linewidth=1)
-        ax_rsi.axhline(70, color='#8f2020', linewidth=0.5)
-        ax_rsi.axhline(30, color='#386d13', linewidth=0.5)
-        ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
         ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 70, where=(rsi[-SP:]
                                                                >= 70), interpolate=True,  facecolor='#8f2020', edgecolor='#8f2020')
         ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 30, where=(rsi[-SP:]
@@ -153,20 +157,17 @@ class Plotter():
         ax_rsi.set_yticks([30, 50, 70])
         ax_rsi.text(0.015, 0.95, 'RSI (14)', va='top',
                     color='w', transform=ax_rsi.transAxes)
-        self.set_ax_properties(ax_rsi)
+        self.set_ax_properties(ax=ax_rsi, ax_rsi=ax_rsi)
 
-        plt.setp(ax_rsi.get_xticklabels(), visible=False, size=8)
         plt.title('{} Stock'.format(stock), color='w')
         plt.ylabel('RSI')
 
         return ax_rsi
 
     def graph_candlesticks(self, stock, quotes, dates, close_price, ax_rsi):
-        mov_avg_20 = indicators.moving_average(close_price, window=20)
-        mov_avg_60 = indicators.moving_average(close_price, window=60)
-        mov_avg_100 = indicators.moving_average(close_price, window=100)
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
+        mov_avg_20, mov_avg_60, mov_avg_100 = self.get_mov_avg(close_price)
         plt.ylim(min(close_price[-300:-1])*0.8, max(close_price[-300:-1])*1.1)
         ax_can_sticks.yaxis.label.set_color('w')
         candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
@@ -183,16 +184,10 @@ class Plotter():
                 'Not enough stock data to plot 100MA for stock {}'.format(stock))
         plt.setp(ax_can_sticks .get_xticklabels(), visible=False, size=8)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
-        plt.xlabel('Date')
         plt.ylabel('Price and Volume')
         plt.grid()
-        ax_can_sticks.xaxis_date()
-        ax_can_sticks.xaxis.set_major_formatter(
-            m_dates.DateFormatter("%Y-%m-%d"))
-
-        maLeg = plt.legend(loc=9, ncol=2, borderaxespad=0,
-                           fancybox=True, prop={'size': 7})
-        maLeg.get_frame().set_alpha(0.4)
+        plt.legend(loc=9, ncol=2, borderaxespad=0,
+                   fancybox=True, prop={'size': 7}, framealpha=0.4)
         self.set_ax_properties(ax_can_sticks)
         return ax_can_sticks
 
@@ -221,8 +216,6 @@ class Plotter():
                     color='w', transform=ax_ppo.transAxes)
         ax_ppo.fill_between(dates, ppo-ppo_ema9, 0, alpha=0.5,
                             facecolor='#00ffe8', edgecolor='#00ffe8')
-        plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
-
         ax_ppo.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
@@ -231,6 +224,7 @@ class Plotter():
     def graph_obv(self, dates, ax_can_sticks, existingData):
         ax_obv = plt.subplot2grid(shape=(7, 1), loc=(
             6, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
+
         obv = indicators.on_balance_volume(existingData)
 
         ax_obv.plot(dates[-len(obv):], obv['obv'],
@@ -239,7 +233,7 @@ class Plotter():
                     color='white', linewidth=1)
         ax_obv.text(0.015, 0.95, 'OBV (21)', va='top',
                     color='w', transform=ax_obv.transAxes)
-        plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
+
         ylim_low = min(obv['obv'].iloc[-300:-1])
         ylim_high = max(obv['obv'].iloc[-300:-1])
         plt.ylim(ylim_low, ylim_high)
@@ -250,10 +244,9 @@ class Plotter():
         self.set_ax_properties(ax_obv)
 
     def graph_candlestick_volume_show(self, stock, existingData):
-        dates_string = existingData.iloc[:, 0]
+        dates_string = existingData.loc[:, "Date"]
         dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
         existingData['Date'] = m_dates.date2num(dates)
-
         close_price = existingData.loc[:, "Close"]
         volume = existingData.loc[:, "Volume"]
         quotes = [tuple(x) for x in existingData[[
