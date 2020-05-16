@@ -147,9 +147,9 @@ class Plotter():
         ax_rsi.axhline(30, color='#386d13', linewidth=0.5)
         ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
         ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 70, where=(rsi[-SP:]
-                                                               >= 70), facecolor='#8f2020', edgecolor='#8f2020')
+                                                               >= 70), interpolate=True,  facecolor='#8f2020', edgecolor='#8f2020')
         ax_rsi.fill_between(dates[-SP:], rsi[-SP:], 30, where=(rsi[-SP:]
-                                                               <= 30), facecolor='#386d13', edgecolor='#386d13')
+                                                               <= 30), interpolate=True, facecolor='#386d13', edgecolor='#386d13')
         ax_rsi.set_yticks([30, 50, 70])
         ax_rsi.text(0.015, 0.95, 'RSI (14)', va='top',
                     color='w', transform=ax_rsi.transAxes)
@@ -167,11 +167,8 @@ class Plotter():
         mov_avg_100 = indicators.moving_average(close_price, window=100)
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
-        ylim_low = min(close_price[-300:-1])*0.8
-        ylim_high = max(close_price[-300:-1])*1.1
-        plt.ylim(ylim_low, ylim_high)
+        plt.ylim(min(close_price[-300:-1])*0.8, max(close_price[-300:-1])*1.1)
         ax_can_sticks.yaxis.label.set_color('w')
-        self.set_ax_properties(ax_can_sticks)
         candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
                          colorup='#53C156', colordown='#ff1717')
         ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
@@ -196,6 +193,7 @@ class Plotter():
         maLeg = plt.legend(loc=9, ncol=2, borderaxespad=0,
                            fancybox=True, prop={'size': 7})
         maLeg.get_frame().set_alpha(0.4)
+        self.set_ax_properties(ax_can_sticks)
         return ax_can_sticks
 
     def graph_volume(self, volume, dates, ax_can_sticks):
@@ -277,6 +275,7 @@ class Plotter():
 
         mng = plt.get_current_fig_manager()
         mng.window.state('zoomed')
+        # plt.gcf().autofmt_xdate()
         plt.show()
 
     def graph_data_show(self, stocks):
