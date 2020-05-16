@@ -118,9 +118,24 @@ class Stock:
 
 
 class Plotter():
+    start_lim = m_dates.date2num(datetime.strptime(
+        str(date.today() - timedelta(days=365)), '%Y-%m-%d'))
+    end_lim = m_dates.date2num(datetime.strptime(
+        str(datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d'))
+
     def __init__(self):
         self.stock = Stock()
         self.logger = Logger()
+
+    def set_spines(self, ax):
+        ax.spines['bottom'].set_color('#5998ff')
+        ax.spines['top'].set_color('#5998ff')
+        ax.spines['left'].set_color('#5998ff')
+        ax.spines['right'].set_color('#5998ff')
+
+    def set_ticks(self, ax):
+        ax.tick_params(axis='y', colors='w')
+        ax.tick_params(axis='x', colors='w')
 
     def graph_rsi(self, stock, dates, close_price):
         SP = len(dates)
@@ -139,30 +154,21 @@ class Plotter():
         ax_rsi.set_yticks([30, 50, 70])
         ax_rsi.set_facecolor('#07000d')
         ax_rsi.yaxis.label.set_color('w')
-        ax_rsi.spines['bottom'].set_color('#5998ff')
-        ax_rsi.spines['top'].set_color('#5998ff')
-        ax_rsi.spines['left'].set_color('#5998ff')
-        ax_rsi.spines['right'].set_color('#5998ff')
         ax_rsi.text(0.015, 0.95, 'RSI (14)', va='top',
                     color='w', transform=ax_rsi.transAxes)
-        ax_rsi.tick_params(axis='y', colors='w')
-        ax_rsi.tick_params(axis='x', colors='w')
+        self.set_ticks(ax_rsi)
+
         plt.setp(ax_rsi.get_xticklabels(), visible=False, size=8)
         plt.title('{} Stock'.format(stock), color='w')
         plt.ylabel('RSI')
+
+        self.set_spines(ax_rsi)
         return ax_rsi
 
     def graph_candlesticks(self, stock, quotes, dates, close_price, ax_rsi):
         mov_avg_20 = indicators.moving_average(close_price, window=20)
         mov_avg_60 = indicators.moving_average(close_price, window=60)
         mov_avg_100 = indicators.moving_average(close_price, window=100)
-        start_lim = str(date.today() - timedelta(days=365))
-        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
-
-        start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
-        start_lim = m_dates.date2num(start_lim)
-        end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
-        end_lim = m_dates.date2num(end_lim)
         ax_can_sticks = plt.subplot2grid(shape=(7, 1), loc=(
             1, 0), rowspan=4, sharex=ax_rsi, colspan=1)
         ax_can_sticks.set_facecolor('#07000d')
@@ -170,12 +176,7 @@ class Plotter():
         ylim_high = max(close_price[-300:-1])*1.1
         plt.ylim(ylim_low, ylim_high)
         ax_can_sticks.yaxis.label.set_color('w')
-        ax_can_sticks.spines['bottom'].set_color('#5998ff')
-        ax_can_sticks.spines['top'].set_color('#5998ff')
-        ax_can_sticks.spines['left'].set_color('#5998ff')
-        ax_can_sticks.spines['right'].set_color('#5998ff')
-        ax_can_sticks.tick_params(axis='y', colors='w')
-        ax_can_sticks.tick_params(axis='x', colors='w')
+        self.set_ticks(ax_can_sticks)
         candlestick_ohlc(ax_can_sticks, quotes, width=0.75,
                          colorup='#53C156', colordown='#ff1717')
         ax_can_sticks.plot(dates[-len(mov_avg_20):], mov_avg_20,
@@ -208,12 +209,9 @@ class Plotter():
                             facecolor='#00ffe8', alpha=0.5)
         ax_vol.axes.yaxis.set_ticklabels([])
         ax_vol.set_ylim(0, 2*volume.max())
-        ax_vol.spines['bottom'].set_color('#5998ff')
-        ax_vol.spines['top'].set_color('#5998ff')
-        ax_vol.spines['left'].set_color('#5998ff')
-        ax_vol.spines['right'].set_color('#5998ff')
-        ax_vol.tick_params(axis='x', colors='w')
-        ax_vol.tick_params(axis='y', colors='w')
+
+        self.set_ticks(ax_vol)
+        self.set_spines(ax_vol)
 
     def graph_ppo(self, dates, ax_can_sticks, close_price):
         ax_ppo = plt.subplot2grid(shape=(7, 1), loc=(
@@ -233,23 +231,14 @@ class Plotter():
                             facecolor='#00ffe8', edgecolor='#00ffe8')
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
         ax_ppo.set_facecolor('#07000d')
-        ax_ppo.spines['bottom'].set_color('#5998ff')
-        ax_ppo.spines['top'].set_color('#5998ff')
-        ax_ppo.spines['left'].set_color('#5998ff')
-        ax_ppo.spines['right'].set_color('#5998ff')
-        ax_ppo.tick_params(axis='x', colors='w')
-        ax_ppo.tick_params(axis='y', colors='w')
+
         ax_ppo.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
-    def graph_obv(self, dates, ax_can_sticks, existingData):
-        start_lim = str(date.today() - timedelta(days=365))
-        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
+        self.set_ticks(ax_ppo)
+        self.set_spines(ax_ppo)
 
-        start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
-        start_lim = m_dates.date2num(start_lim)
-        end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
-        end_lim = m_dates.date2num(end_lim)
+    def graph_obv(self, dates, ax_can_sticks, existingData):
         ax_obv = plt.subplot2grid(shape=(7, 1), loc=(
             6, 0), sharex=ax_can_sticks, rowspan=1, colspan=1)
         obv = indicators.on_balance_volume(existingData)
@@ -262,32 +251,23 @@ class Plotter():
                     color='w', transform=ax_obv.transAxes)
         plt.gca().yaxis.set_major_locator(m_ticker.MaxNLocator(prune='upper'))
         ax_obv.set_facecolor('#07000d')
-        plt.xlim(left=start_lim, right=end_lim)
         ylim_low = min(obv['obv'].iloc[-300:-1])
         ylim_high = max(obv['obv'].iloc[-300:-1])
         plt.ylim(ylim_low, ylim_high)
-        ax_obv.spines['bottom'].set_color('#5998ff')
-        ax_obv.spines['top'].set_color('#5998ff')
-        ax_obv.spines['left'].set_color('#5998ff')
-        ax_obv.spines['right'].set_color('#5998ff')
-        ax_obv.tick_params(axis='x', colors='w')
-        ax_obv.tick_params(axis='y', colors='w')
+
         ax_obv.yaxis.set_major_locator(
             m_ticker.MaxNLocator(nbins=5, prune='upper'))
 
-    def graph_candlestick_volume_show(self, stock, existingData):
-        start_lim = str(date.today() - timedelta(days=365))
-        end_lim = str(datetime.now().strftime('%Y-%m-%d'))
-        start_lim = datetime.strptime(start_lim, '%Y-%m-%d')
-        start_lim = m_dates.date2num(start_lim)
-        end_lim = datetime.strptime(end_lim, '%Y-%m-%d')
-        end_lim = m_dates.date2num(end_lim)
+        self.set_ticks(ax_obv)
+        self.set_spines(ax_obv)
 
+    def graph_candlestick_volume_show(self, stock, existingData):
         dates_string = existingData.iloc[:, 0]
         dates = [datetime.strptime(d, '%Y-%m-%d') for d in dates_string]
         existingData['Date'] = m_dates.date2num(dates)
 
         close_price = existingData.loc[:, "Close"]
+        volume = existingData.loc[:, "Volume"]
         quotes = [tuple(x) for x in existingData[[
             'Date', 'Open', 'High', 'Low', 'Close']].values]
 
@@ -299,7 +279,6 @@ class Plotter():
         ax_can_sticks = self.graph_candlesticks(
             stock, quotes, dates, close_price, ax_rsi)
         # Volume
-        volume = existingData.loc[:, "Volume"]
         self.graph_volume(volume, dates, ax_can_sticks)
         # PPO
         self.graph_ppo(dates, ax_can_sticks, close_price)
@@ -308,6 +287,7 @@ class Plotter():
 
         plt.subplots_adjust(hspace=0.0, bottom=0.1,
                             top=0.94, right=0.96, left=0.06)
+        plt.xlim(left=self.start_lim, right=self.end_lim)
 
         mng = plt.get_current_fig_manager()
         mng.window.state('zoomed')
