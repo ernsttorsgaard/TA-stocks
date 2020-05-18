@@ -5,4 +5,3 @@ url.py
 *.log
 req.py
 __pycache__
-TA_old.py
