@@ -49,7 +49,6 @@ class Stock:
 
     stock_folder = '/Stockmarked/'
     start_limit = str(date.today() - timedelta(days=365))
-    stock_counter = 0
     stock_data = pd.DataFrame([[0, 0, 0, 0, 0, 0, 0]], columns=[
         'Stock', 'Price', 'RSI', 'MACD', 'abs(MACD - EMA9)', 'MACD norm', 'RSI mean change'])
     logger = Logger()
@@ -77,10 +76,6 @@ class Stock:
 
     @staticmethod
     def pull_and_save_stocks(stock):
-        # Stock.stock_counter += 1
-        # print(str(Stock.stock_counter) + "/" +
-        #       str(len(Stock.obx_stocks)), end=" ")
-        # print(f'Pulling and saving stock {stock}')
         data = Stock.pull_stocks(stock)
         Stock.save_stocks_to_file(data, stock)
 
@@ -331,10 +326,9 @@ class UserInput():
     plotter = Plotter()
 
     @staticmethod
-    def tqdm_parallel_map(executor, fn, *iterables):
+    def tqdm_parallel_map(executor, fn, stocks):
         futures_list = []
-        for iterable in iterables:
-            futures_list += [executor.submit(fn, i) for i in iterable]
+        futures_list += [executor.submit(fn, stock) for stock in stocks]
         for f in tqdm(concurrent.futures.as_completed(futures_list), total=len(futures_list)):
             f.result()
 
@@ -356,12 +350,13 @@ class UserInput():
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 UserInput.tqdm_parallel_map(
                     executor, UserInput.plotter.m_stock.pull_and_save_stocks, UserInput.plotter.m_stock.obx_stocks)
-                # executor.map(UserInput.plotter.m_stock.pull_and_save_stocks,
-                #                        UserInput.plotter.m_stock.obx_stocks)
+
             intermediate_time = round(time.process_time() - start_time, 1)
             intermedate_start_time = time.process_time()
+
             UserInput.plotter.m_stock.browse_stocks(
                 UserInput.plotter.m_stock.obx_stocks)
+
             int_time = round(time.process_time() - intermedate_start_time, 1)
             execution_time = round(time.process_time() - start_time, 1)
             print(f"Pulling and saving took {intermediate_time} seconds")
