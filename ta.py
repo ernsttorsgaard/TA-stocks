@@ -77,10 +77,10 @@ class Stock:
 
     @staticmethod
     def pull_and_save_stocks(stock):
-        Stock.stock_counter += 1
-        print(str(Stock.stock_counter) + "/" +
-              str(len(Stock.obx_stocks)), end=" ")
-        print(f'Pulling and saving stock {stock}')
+        # Stock.stock_counter += 1
+        # print(str(Stock.stock_counter) + "/" +
+        #       str(len(Stock.obx_stocks)), end=" ")
+        # print(f'Pulling and saving stock {stock}')
         data = Stock.pull_stocks(stock)
         Stock.save_stocks_to_file(data, stock)
 
@@ -331,6 +331,14 @@ class UserInput():
     plotter = Plotter()
 
     @staticmethod
+    def tqdm_parallel_map(executor, fn, *iterables):
+        futures_list = []
+        for iterable in iterables:
+            futures_list += [executor.submit(fn, i) for i in iterable]
+        for f in tqdm(concurrent.futures.as_completed(futures_list), total=len(futures_list)):
+            f.result()
+
+    @staticmethod
     def user_input():
         alternative = input(
             "Valg 1-5: \n 1: MACD norm filter \n 2: RSI change filter \n 3: Pull new stock data \n 4: Plot stocks \n 5: Exit \n >> ")
@@ -346,8 +354,10 @@ class UserInput():
         elif int(alternative) == 3:
             start_time = time.process_time()
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                executor.map(UserInput.plotter.m_stock.pull_and_save_stocks,
-                             UserInput.plotter.m_stock.obx_stocks)
+                UserInput.tqdm_parallel_map(
+                    executor, UserInput.plotter.m_stock.pull_and_save_stocks, UserInput.plotter.m_stock.obx_stocks)
+                # executor.map(UserInput.plotter.m_stock.pull_and_save_stocks,
+                #                        UserInput.plotter.m_stock.obx_stocks)
             intermediate_time = round(time.process_time() - start_time, 1)
             intermedate_start_time = time.process_time()
             UserInput.plotter.m_stock.browse_stocks(
