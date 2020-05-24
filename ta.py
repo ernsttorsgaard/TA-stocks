@@ -148,14 +148,6 @@ class Plotter():
             ax_rsi.axhline(50, color='white', linewidth=0.5, linestyle=':')
 
     @staticmethod
-    def adjust_df_dates(stock_data_raw):
-        dates_string = stock_data_raw.loc[:, "Date"]
-        dates = [datetime.strptime(d, '%Y-%m-%d')
-                 for d in stock_data_raw.loc[:, "Date"]]
-        stock_data_raw['Date'] = m_dates.date2num(dates)
-        return stock_data_raw, dates
-
-    @staticmethod
     def graph_rsi(stock, dates, close_price):
         ax_rsi = plt.subplot2grid(
             shape=(7, 1), loc=(0, 0), rowspan=1, colspan=1)
@@ -257,9 +249,11 @@ class Plotter():
         Plotter.set_ax_properties(ax_obv)
 
     @staticmethod
-    def graph_candlestick_volume_show(stock, dates, stock_data):
+    def graph_candlestick_volume_show(stock, stock_data):
         close_price = stock_data.loc[:, "Close"]
         volume = stock_data.loc[:, "Volume"]
+        dates = stock_data.loc[:, "Date"]
+        stock_data["Date"] = m_dates.date2num(dates)
         quotes = [tuple(x) for x in stock_data[[
             'Date', 'Open', 'High', 'Low', 'Close']].values]
 
@@ -288,10 +282,10 @@ class Plotter():
             try:
                 print('Stock {}'.format(stock))
                 file_name = os.getcwd() + Plotter.m_stock.stock_folder + stock + '.csv'
-                stock_data_raw = pd.read_csv(file_name)
-                stock_data_adj, dates = Plotter.adjust_df_dates(stock_data_raw)
+                stock_data = pd.read_csv(file_name, parse_dates=[
+                    "Date"], date_parser=lambda x: datetime.strptime(x, '%Y-%m-%d'))
                 Plotter.graph_candlestick_volume_show(
-                    stock, dates, stock_data_adj)
+                    stock, stock_data)
             except Exception as e:
                 Plotter.m_stock.logger.log_error(
                     'Could not read stock file {} with error {}'.format(stock, e))
