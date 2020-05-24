@@ -4,9 +4,8 @@ chardet==3.0.4
 cycler==0.10.0
 idna==2.9
 kiwisolver==1.2.0
-lxml==4.5.0
+lxml==4.5.1
 matplotlib==3.2.1
-mpl-finance==0.10.1
 mplfinance==0.12.4a0
 numpy==1.18.4
 pandas==1.0.3
@@ -19,3 +18,4 @@ requests==2.23.0
 six==1.14.0
 tqdm==4.46.0
 urllib3==1.25.9
+webencodings==0.5.1

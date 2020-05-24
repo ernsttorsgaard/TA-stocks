@@ -1,18 +1,15 @@
-import pandas as pd
-import pandas_datareader.data as web
-import numpy as np
-from datetime import datetime, date, timedelta
 from matplotlib import pyplot as plt, ticker as m_ticker, dates as m_dates
-import mplfinance
 from mplfinance.original_flavor import candlestick_ohlc
-import math
-import os
-from tqdm import tqdm
-import indicators
+from datetime import datetime, date, timedelta
+import pandas_datareader.data as web
 import concurrent.futures
-import time
-import multiprocessing
+from tqdm import tqdm
+import pandas as pd
+import numpy as np
+import indicators
 import logging
+import time
+import os
 
 
 class Logger:
