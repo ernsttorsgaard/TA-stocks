@@ -335,44 +335,52 @@ class UserInput():
     def user_input():
         alternative = input(
             "Valg 1-6: \n 1: MACD norm filter \n 2: RSI change filter \n 3: Pull new stock data \n 4: Plot stocks \n 5: Update stocks \n 6: Exit \n >> ")
-        while int(alternative) < 1 or int(alternative) > 5:
-            print("Wrong input, try again: ")
-            alternative = input(">> ")
-        if int(alternative) == 1:
-            UserInput.plotter.plot_macd_change(
-                UserInput.num_stock_to_show)
-        elif int(alternative) == 2:
-            UserInput.plotter.plot_RSI_change(
-                UserInput.num_stock_to_show)
-        elif int(alternative) == 3:
-            start_time = time.process_time()
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                UserInput.tqdm_parallel_map(
-                    executor, UserInput.plotter.m_stock.pull_and_save_stocks, stocklist.get_stocks_from_file())
+        try:
+            while int(alternative) >= 1 or int(alternative) <= 6:
+                if int(alternative) == 1:
+                    UserInput.plotter.plot_macd_change(
+                        UserInput.num_stock_to_show)
+                elif int(alternative) == 2:
+                    UserInput.plotter.plot_RSI_change(
+                        UserInput.num_stock_to_show)
+                elif int(alternative) == 3:
+                    start_time = time.process_time()
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        UserInput.tqdm_parallel_map(
+                            executor, UserInput.plotter.m_stock.pull_and_save_stocks, stocklist.get_stocks_from_file())
 
-            intermediate_time = round(time.process_time() - start_time, 1)
-            intermedate_start_time = time.process_time()
+                    intermediate_time = round(
+                        time.process_time() - start_time, 1)
+                    intermedate_start_time = time.process_time()
 
-            UserInput.plotter.m_stock.browse_stocks(
-                stocklist.get_stocks_from_file())
+                    UserInput.plotter.m_stock.browse_stocks(
+                        stocklist.get_stocks_from_file())
 
-            int_time = round(time.process_time() - intermedate_start_time, 1)
-            execution_time = round(time.process_time() - start_time, 1)
-            print(f"Pulling and saving took {intermediate_time} seconds")
-            print(f"Store and browse took {int_time} seconds")
-            print(f"Total execution time: {execution_time} seconds")
-        elif int(alternative) == 4:
-            stocks_own = ['KOA.OL', 'SHLF.OL', 'ENTRA.OL', 'EQNR.OL', 'PEN.OL', 'DNB.OL',
-                          'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL',
-                          'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
-            stocks_watch = []
+                    int_time = round(time.process_time() -
+                                     intermedate_start_time, 1)
+                    execution_time = round(time.process_time() - start_time, 1)
+                    print(
+                        f"Pulling and saving took {intermediate_time} seconds")
+                    print(f"Store and browse took {int_time} seconds")
+                    print(f"Total execution time: {execution_time} seconds")
+                elif int(alternative) == 4:
+                    stocks_own = ['KOA.OL', 'SHLF.OL', 'ENTRA.OL', 'EQNR.OL', 'PEN.OL', 'DNB.OL',
+                                  'NHY.OL', 'PHO.OL', 'FRO.OL', 'HUNT.OL', 'AKERBP.OL', 'AKSO.OL',
+                                  'B2H.OL', 'ODL.OL', 'KID.OL', 'KAHOOT-ME.OL']
+                    stocks_watch = []
 
-            UserInput.plotter.graph_data_show(stocks_own)
-            UserInput.plotter.graph_data_show(stocks_watch)
-        elif int(alternative) == 5:
-            stocklist.dump_to_file()
-        elif int(alternative) == 6:
-            exit()
+                    UserInput.plotter.graph_data_show(stocks_own)
+                    UserInput.plotter.graph_data_show(stocks_watch)
+                elif int(alternative) == 5:
+                    stocklist.dump_to_file()
+
+                elif int(alternative) == 6:
+                    exit()
+
+                alternative = input(">> ")
+
+        except Exception as e:
+            print(f"{alternative} is not valid input, program failes with error {e}")
 
 
 def main():
