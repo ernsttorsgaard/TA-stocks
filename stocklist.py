@@ -41,5 +41,8 @@ def dump_to_file():
 
 
 def get_stocks_from_file():
-    with open("Stockmarked/stocks.txt", 'r') as f:
-        return json.load(f)
+    with open("Stockmarked/stocks.txt", 'r') as stock_file:
+        with open("Stockmarked/unwanted_stocks.txt", 'r') as unwanted_stock_file:
+            stock_full = json.load(stock_file)
+            stock_unwanted = json.load(unwanted_stock_file)
+            return [stock for stock in stock_full if stock not in stock_unwanted]
