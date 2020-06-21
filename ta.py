@@ -362,7 +362,8 @@ class UserInput():
                 elif int(alternative) == 6:
                     exit()
 
-                alternative = input(">> ")
+                alternative = input(
+                    "Valg 1-6: \n 1: MACD norm filter \n 2: RSI change filter \n 3: Pull new stock data \n 4: Plot stocks \n 5: Update stocks \n 6: Exit \n >> ")
 
         except Exception as e:
             print(f"{alternative} is not valid input, program failes with error {e}")
